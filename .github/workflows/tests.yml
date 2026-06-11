@@ -1,0 +1,46 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+        filament: ['~4.0', '~5.0']
+
+    name: PHP ${{ matrix.php }} - Filament ${{ matrix.filament }}
+
+    steps:
+      - name: Checkout package
+        uses: actions/checkout@v4
+        with:
+          path: laravel-seo-filament
+
+      # The core package is consumed via a sibling path repository
+      # (see composer.json "repositories"), mirroring local development.
+      - name: Checkout core package
+        uses: actions/checkout@v4
+        with:
+          repository: Fibonoir/laravel-seo
+          path: laravel-seo
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pdo_sqlite, gd
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: laravel-seo-filament
+        run: composer update --with "filament/filament:${{ matrix.filament }}" --prefer-dist --no-interaction --no-progress
+
+      - name: Run tests
+        working-directory: laravel-seo-filament
+        run: vendor/bin/pest --ci
