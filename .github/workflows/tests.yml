@@ -18,14 +18,14 @@ jobs:
 
     steps:
       - name: Checkout package
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: laravel-seo-filament
 
       # The core package is consumed via a sibling path repository
       # (see composer.json "repositories"), mirroring local development.
       - name: Checkout core package
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: rankbeam/laravel-seo
           path: laravel-seo
