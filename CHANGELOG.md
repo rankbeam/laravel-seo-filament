@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-13
+
+### Added
+
+- `SEOFields::modifyFieldUsing(string $field, Closure $modifier)` — an
+  extension point letting add-on packages decorate individual SEO fields
+  when the section is built (used by the Pro AI suggestion actions), plus
+  `SEOFields::flushFieldModifiers()` for test isolation.
+
 ## [1.0.0] - 2026-06-12
 
 Initial release.

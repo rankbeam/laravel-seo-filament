@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Rankbeam\Seo\Filament\Forms;
 
-use Rankbeam\Seo\Services\SEOWarningEvaluator;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -16,6 +15,7 @@ use Filament\Schemas\Components\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
+use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
 /**
  * A drop-in SEO section for any Filament resource form.
@@ -44,6 +44,30 @@ use Illuminate\Support\HtmlString;
 class SEOFields
 {
     public const FIELDS = ['title', 'description', 'canonical', 'robots', 'og_image'];
+
+    /** @var array<string, array<int, \Closure(Field): ?Field>> */
+    protected static array $fieldModifiers = [];
+
+    /**
+     * Register a modifier applied to one named field (see self::FIELDS)
+     * every time the section is built. This is the extension point for
+     * add-on packages - e.g. the Pro AI suggestion actions attach
+     * themselves to 'title' and 'description' through it. The closure
+     * receives the built Field and returns it (returning null keeps the
+     * field as passed in).
+     */
+    public static function modifyFieldUsing(string $field, \Closure $modifier): void
+    {
+        static::$fieldModifiers[$field][] = $modifier;
+    }
+
+    /**
+     * Drop all registered field modifiers (used between tests).
+     */
+    public static function flushFieldModifiers(): void
+    {
+        static::$fieldModifiers = [];
+    }
 
     /**
      * @param  array<int, string>|null  $only  Subset of self::FIELDS to show
@@ -115,6 +139,26 @@ class SEOFields
      * @return array<string, Field>
      */
     protected static function fields(): array
+    {
+        $fields = static::baseFields();
+
+        foreach (static::$fieldModifiers as $name => $modifiers) {
+            if (! isset($fields[$name])) {
+                continue;
+            }
+
+            foreach ($modifiers as $modifier) {
+                $fields[$name] = $modifier($fields[$name]) ?? $fields[$name];
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * @return array<string, Field>
+     */
+    protected static function baseFields(): array
     {
         return [
             'title' => TextInput::make('title')
