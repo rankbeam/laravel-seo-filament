@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Fibonoir\LaravelSEO\Models\SEODefault;
+use Rankbeam\Seo\Models\SEODefault;
 use Rankbeam\Seo\Filament\Support\SEOFieldSources;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Post;
 

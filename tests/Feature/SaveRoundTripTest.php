@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Fibonoir\LaravelSEO\Models\SEOMeta;
+use Rankbeam\Seo\Models\SEOMeta;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;

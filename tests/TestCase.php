@@ -6,7 +6,7 @@ namespace Rankbeam\Seo\Filament\Tests;
 
 use BladeUI\Heroicons\BladeHeroiconsServiceProvider;
 use BladeUI\Icons\BladeIconsServiceProvider;
-use Fibonoir\LaravelSEO\SEOServiceProvider;
+use Rankbeam\Seo\SEOServiceProvider;
 use Filament\Actions\ActionsServiceProvider;
 use Filament\Facades\Filament;
 use Filament\FilamentServiceProvider;

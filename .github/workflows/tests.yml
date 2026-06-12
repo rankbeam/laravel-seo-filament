@@ -27,7 +27,7 @@ jobs:
       - name: Checkout core package
         uses: actions/checkout@v4
         with:
-          repository: Fibonoir/laravel-seo
+          repository: rankbeam/laravel-seo
           path: laravel-seo
 
       - name: Setup PHP

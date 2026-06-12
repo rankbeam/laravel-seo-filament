@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Rankbeam\Seo\Filament\Forms;
 
-use Fibonoir\LaravelSEO\Services\SEOWarningEvaluator;
+use Rankbeam\Seo\Services\SEOWarningEvaluator;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;

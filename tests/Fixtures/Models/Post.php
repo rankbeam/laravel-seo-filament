@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Rankbeam\Seo\Filament\Tests\Fixtures\Models;
 
-use Fibonoir\LaravelSEO\Traits\HasSEO;
+use Rankbeam\Seo\Traits\HasSEO;
 use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model

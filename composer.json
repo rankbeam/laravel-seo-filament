@@ -18,7 +18,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "fibonoir/laravel-seo": "*",
+        "rankbeam/laravel-seo": "^2.0",
         "filament/filament": "^4.0|^5.0"
     },
     "require-dev": {
@@ -46,6 +46,9 @@
         }
     },
     "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        },
         "laravel": {
             "providers": [
                 "Rankbeam\\Seo\\Filament\\SeoFilamentServiceProvider"

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Rankbeam\Seo\Filament\Support;
 
-use Fibonoir\LaravelSEO\Data\SEOData;
-use Fibonoir\LaravelSEO\Services\SEOComputedBuilder;
-use Fibonoir\LaravelSEO\Services\SEODefaultsRepository;
+use Rankbeam\Seo\Data\SEOData;
+use Rankbeam\Seo\Services\SEOComputedBuilder;
+use Rankbeam\Seo\Services\SEODefaultsRepository;
 use Illuminate\Database\Eloquent\Model;
 
 /**

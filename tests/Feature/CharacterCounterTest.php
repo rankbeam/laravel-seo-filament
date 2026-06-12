@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Fibonoir\LaravelSEO\Services\SEOWarningEvaluator;
+use Rankbeam\Seo\Services\SEOWarningEvaluator;
 use Livewire\Livewire;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Post;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\EditPost;

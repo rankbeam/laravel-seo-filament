@@ -1,5 +1,5 @@
 @php
-    use Fibonoir\LaravelSEO\Services\SEOWarningEvaluator;
+    use Rankbeam\Seo\Services\SEOWarningEvaluator;
     use Rankbeam\Seo\Filament\Support\SEOFieldSources;
 
     $record = $getRecord();

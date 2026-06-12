@@ -1,7 +1,7 @@
 # rankbeam/laravel-seo-filament
 
 Filament form components for the [Rankbeam Laravel SEO core](../laravel-seo) (currently
-published as `fibonoir/laravel-seo`; the vendor rename to `rankbeam` lands with core v2.0.0).
+published as `rankbeam/laravel-seo`; the vendor rename to `rankbeam` lands with core v2.0.0).
 
 Adds a complete, production-pattern SEO section to any Filament resource form:
 
@@ -24,7 +24,7 @@ relationship — no extra columns on your tables.
 |---|---|
 | PHP | 8.2 – 8.4 |
 | Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
-| Core package | `fibonoir/laravel-seo` (master / upcoming v2.0.0) |
+| Core package | `rankbeam/laravel-seo` (master / upcoming v2.0.0) |
 
 ## Installation
 
@@ -41,7 +41,7 @@ composer require rankbeam/laravel-seo-filament
 The model behind your resource must use the core `HasSEO` trait:
 
 ```php
-use Fibonoir\LaravelSEO\Traits\HasSEO;
+use Rankbeam\Seo\Traits\HasSEO;
 
 class Post extends Model
 {
