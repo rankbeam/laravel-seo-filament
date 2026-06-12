@@ -1,7 +1,10 @@
 # rankbeam/laravel-seo-filament
 
-Filament form components for the [Rankbeam Laravel SEO core](../laravel-seo) (currently
-published as `rankbeam/laravel-seo`; the vendor rename to `rankbeam` lands with core v2.0.0).
+[![Tests](https://github.com/rankbeam/laravel-seo-filament/actions/workflows/tests.yml/badge.svg)](https://github.com/rankbeam/laravel-seo-filament/actions/workflows/tests.yml)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/rankbeam/laravel-seo-filament.svg?style=flat-square)](https://packagist.org/packages/rankbeam/laravel-seo-filament)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.md)
+
+Filament form components for the [Rankbeam Laravel SEO core](https://github.com/rankbeam/laravel-seo) (`rankbeam/laravel-seo`).
 
 Adds a complete, production-pattern SEO section to any Filament resource form:
 
@@ -24,7 +27,7 @@ relationship — no extra columns on your tables.
 |---|---|
 | PHP | 8.2 – 8.4 |
 | Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
-| Core package | `rankbeam/laravel-seo` (master / upcoming v2.0.0) |
+| Core package | `rankbeam/laravel-seo` ^2.0 |
 
 ## Installation
 
@@ -32,9 +35,16 @@ relationship — no extra columns on your tables.
 composer require rankbeam/laravel-seo-filament
 ```
 
-> **Local development:** the package consumes the core via a sibling path repository
-> (`../laravel-seo`). CI checks out both repositories side by side; CI goes green once the
-> carved core (T1) is pushed to the canonical repo.
+Installing this package pulls in the core (`rankbeam/laravel-seo`). If you have
+not set the core up yet:
+
+```bash
+php artisan vendor:publish --tag=seo-config
+php artisan migrate
+```
+
+> **Contributing / local development:** the repo consumes the core via a sibling
+> path repository (`../laravel-seo`); CI checks out both repositories side by side.
 
 ## Usage
 

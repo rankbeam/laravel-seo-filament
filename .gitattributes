@@ -1,0 +1,8 @@
+# Keep composer dists lean: exclude development-only files from archives.
+/.gitattributes export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/tests export-ignore
+/phpunit.xml export-ignore
+
+* text=auto
