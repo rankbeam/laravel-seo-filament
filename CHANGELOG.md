@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Focus keywords field** — a `TagsInput` in the SEO section persisting to
+  `seo_meta.focus_keywords`. Keywords are edited as plain tags but stored in
+  the core's structured `[{keyword, is_primary}]` shape (the first tag is
+  marked primary), so `SEOMeta::getPrimaryKeyword()` and `SEOData` read them
+  unchanged. Added to `SEOFields::FIELDS`, so it appears by default and can be
+  excluded via the `$only` argument like any other field. Set
+  `seo.keywords.enabled` (core config) to have the free `seo:audit` and the Pro
+  scan flag pages that still lack a keyword.
+
 ## [1.1.0] - 2026-06-13
 
 ### Added

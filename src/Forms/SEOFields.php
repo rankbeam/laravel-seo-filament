@@ -7,6 +7,7 @@ namespace Rankbeam\Seo\Filament\Forms;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Group;
@@ -43,7 +44,7 @@ use Rankbeam\Seo\Services\SEOWarningEvaluator;
  */
 class SEOFields
 {
-    public const FIELDS = ['title', 'description', 'canonical', 'robots', 'og_image'];
+    public const FIELDS = ['title', 'description', 'focus_keywords', 'canonical', 'robots', 'og_image'];
 
     /** @var array<string, array<int, \Closure(Field): ?Field>> */
     protected static array $fieldModifiers = [];
@@ -97,9 +98,15 @@ class SEOFields
                     ->afterStateHydrated(function (Group $component, ?Model $record) use ($only): void {
                         $meta = $record && method_exists($record, 'seoMeta') ? $record->seoMeta : null;
 
-                        $component->getChildSchema()->fill(
-                            $meta?->only($only) ?: [],
-                        );
+                        $state = $meta?->only($only) ?: [];
+
+                        // focus_keywords are stored as [{keyword, is_primary}]
+                        // objects but edited as plain strings in the TagsInput.
+                        if (array_key_exists('focus_keywords', $state)) {
+                            $state['focus_keywords'] = self::keywordsToStrings($state['focus_keywords']);
+                        }
+
+                        $component->getChildSchema()->fill($state);
                     })
                     ->saveRelationshipsUsing(function (Group $component, Model $record) use ($only): void {
                         if (! method_exists($record, 'seoMeta')) {
@@ -111,7 +118,17 @@ class SEOFields
                         // og_image file and turns it into a storable path.
                         $state = collect($component->getChildSchema()->getState())
                             ->only($only)
-                            ->map(function (mixed $value): mixed {
+                            ->map(function (mixed $value, string $key): mixed {
+                                // focus_keywords is legitimately an array of
+                                // strings — turn it back into the stored
+                                // [{keyword, is_primary}] shape, not the first
+                                // element (that collapse is for file uploads).
+                                if ($key === 'focus_keywords') {
+                                    $keywords = self::stringsToKeywords($value);
+
+                                    return $keywords === [] ? null : $keywords;
+                                }
+
                                 if (is_array($value)) {
                                     $value = Arr::first($value);
                                 }
@@ -175,6 +192,13 @@ class SEOFields
                 ->maxLength(500)
                 ->live(debounce: 500)
                 ->helperText(fn (?string $state): HtmlString => self::descriptionCounter($state))
+                ->columnSpan(2),
+
+            'focus_keywords' => TagsInput::make('focus_keywords')
+                ->label('Focus keywords')
+                ->placeholder('Add a keyword')
+                ->helperText('The terms this page should rank for. The first keyword is treated as primary. '
+                    .'Enable seo.keywords.enabled to have the audit and the Pro scan flag pages with no keyword.')
                 ->columnSpan(2),
 
             'canonical' => TextInput::make('canonical')
@@ -249,5 +273,58 @@ class SEOFields
         }
 
         return new HtmlString(e($counter));
+    }
+
+    /**
+     * Flatten the stored focus-keyword shape into plain strings for the
+     * TagsInput. Accepts both the structured [{keyword, is_primary}] objects
+     * the core stores and a plain string array (defensive).
+     *
+     * @return array<int, string>
+     */
+    protected static function keywordsToStrings(mixed $state): array
+    {
+        if (! is_array($state)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(static function (mixed $keyword): ?string {
+            if (is_array($keyword)) {
+                $value = $keyword['keyword'] ?? null;
+
+                return is_string($value) && trim($value) !== '' ? $value : null;
+            }
+
+            return is_string($keyword) && trim($keyword) !== '' ? $keyword : null;
+        }, $state)));
+    }
+
+    /**
+     * Turn the TagsInput's plain strings back into the stored structured shape
+     * the core reads ({@see \Rankbeam\Seo\Data\SEOData::$focusKeywords},
+     * {@see \Rankbeam\Seo\Models\SEOMeta::getPrimaryKeyword()}). The first
+     * keyword is marked primary.
+     *
+     * @return array<int, array{keyword: string, is_primary: bool}>
+     */
+    protected static function stringsToKeywords(mixed $state): array
+    {
+        if (! is_array($state)) {
+            return [];
+        }
+
+        $keywords = [];
+
+        foreach ($state as $value) {
+            $value = is_string($value) ? trim($value) : '';
+
+            if ($value === '') {
+                continue;
+            }
+
+            $keywords[] = ['keyword' => $value, 'is_primary' => $keywords === []];
+        }
+
+        return $keywords;
     }
 }
