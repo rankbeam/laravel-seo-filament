@@ -1,0 +1,276 @@
+<?php
+
+declare(strict_types=1);
+
+use Livewire\Livewire;
+use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Post;
+use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\CreatePost;
+use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\EditPost;
+use Rankbeam\Seo\Models\SEOMeta;
+use Rankbeam\Seo\Services\Schema\BreadcrumbSchema;
+use Rankbeam\Seo\Services\Schema\FAQSchema;
+use Rankbeam\Seo\Services\Schema\ProductSchema;
+
+it('renders the structured-data section', function () {
+    Livewire::test(CreatePost::class)
+        ->assertOk()
+        ->assertSee('Structured data')
+        ->assertSee('Automatic breadcrumb');
+});
+
+it('builds and stores an FAQ document from the repeater', function () {
+    Livewire::test(CreatePost::class)
+        ->fillForm([
+            'title' => 'FAQ post',
+            'slug' => 'faq-post',
+            'seo_schema.blocks' => [
+                ['type' => 'faq', 'questions' => [
+                    ['question' => 'What is it?', 'answer' => 'A Laravel SEO package.'],
+                    ['question' => 'Is it free?', 'answer' => 'The core is MIT licensed.'],
+                ]],
+            ],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $expected = FAQSchema::fromArray([
+        ['question' => 'What is it?', 'answer' => 'A Laravel SEO package.'],
+        ['question' => 'Is it free?', 'answer' => 'The core is MIT licensed.'],
+    ])->toArray();
+
+    $meta = Post::query()->sole()->seoMeta()->sole();
+
+    expect($meta->schema_jsonld)->toEqual($expected)
+        ->and($meta->schema_jsonld['@type'])->toBe('FAQPage');
+
+    expect(SEOMeta::query()->count())->toBe(1);
+});
+
+it('round-trips a stored FAQ document unchanged through the edit page', function () {
+    $stored = FAQSchema::fromArray([
+        ['question' => 'Q one?', 'answer' => 'A one.'],
+        ['question' => 'Q two?', 'answer' => 'A two.'],
+    ])->toArray();
+
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $post->saveSEO(['schema_jsonld' => $stored]);
+
+    Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($post->fresh()->seoMeta()->sole()->schema_jsonld)->toEqual($stored);
+});
+
+it('builds and stores a Product document from the repeater', function () {
+    Livewire::test(CreatePost::class)
+        ->fillForm([
+            'title' => 'Product post',
+            'slug' => 'product-post',
+            'seo_schema.blocks' => [
+                [
+                    'type' => 'product',
+                    'name' => 'Wonder Widget',
+                    'description' => 'The best widget.',
+                    'image' => 'https://example.test/widget.jpg',
+                    'brand' => 'Acme',
+                    'sku' => 'WW-1',
+                    'price' => '99.99',
+                    'currency' => 'EUR',
+                    'availability' => 'InStock',
+                ],
+            ],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $expected = (new ProductSchema)
+        ->setName('Wonder Widget')
+        ->setDescription('The best widget.')
+        ->setImage('https://example.test/widget.jpg')
+        ->setBrand('Acme')
+        ->setSku('WW-1')
+        ->setPrice(99.99, 'EUR')
+        ->setAvailability('InStock')
+        ->toArray();
+
+    $meta = Post::query()->sole()->seoMeta()->sole();
+
+    expect($meta->schema_jsonld)->toEqual($expected)
+        ->and($meta->schema_jsonld['@type'])->toBe('Product')
+        ->and($meta->schema_jsonld['offers']['availability'])->toBe('https://schema.org/InStock');
+});
+
+it('round-trips a stored Product document unchanged through the edit page', function () {
+    $stored = (new ProductSchema)
+        ->setName('Round Trip')
+        ->setImage('https://example.test/rt.jpg')
+        ->setPrice(12.5, 'USD')
+        ->setAvailability('OutOfStock')
+        ->toArray();
+
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $post->saveSEO(['schema_jsonld' => $stored]);
+
+    Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($post->fresh()->seoMeta()->sole()->schema_jsonld)->toEqual($stored);
+});
+
+it('generates a breadcrumb from the model ancestors with one toggle', function () {
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->fillForm(['seo_schema.auto_breadcrumb' => true])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $expected = BreadcrumbSchema::fromModelAncestors($child->fresh())->toArray();
+
+    $stored = $child->fresh()->seoMeta()->sole()->schema_jsonld;
+
+    expect($stored)->toEqual($expected)
+        ->and($stored['@type'])->toBe('BreadcrumbList')
+        ->and($stored['itemListElement'])->toHaveCount(3);
+});
+
+it('hydrates the breadcrumb toggle back on for an auto-generated breadcrumb', function () {
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+    $child->saveSEO(['schema_jsonld' => BreadcrumbSchema::fromModelAncestors($child)->toArray()]);
+
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->assertOk()
+        ->assertSchemaStateSet(['seo_schema.auto_breadcrumb' => true]);
+});
+
+it('rejects a Product block with no image or offer', function () {
+    Livewire::test(CreatePost::class)
+        ->fillForm([
+            'title' => 'Bad product',
+            'slug' => 'bad-product',
+            'seo_schema.blocks' => [
+                ['type' => 'product', 'name' => 'No offer widget'],
+            ],
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['seo_schema.blocks']);
+
+    expect(Post::query()->count())->toBe(0);
+});
+
+it('rejects an FAQ block with a question but no answer', function () {
+    Livewire::test(CreatePost::class)
+        ->fillForm([
+            'title' => 'Bad faq',
+            'slug' => 'bad-faq',
+            'seo_schema.blocks' => [
+                ['type' => 'faq', 'questions' => [
+                    ['question' => 'A question with no answer?', 'answer' => ''],
+                ]],
+            ],
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['seo_schema.blocks']);
+
+    expect(Post::query()->count())->toBe(0);
+});
+
+it('preserves stored schema it cannot represent', function () {
+    $event = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Event',
+        'name' => 'Laravel Conf',
+        'startDate' => '2026-09-01',
+    ];
+
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $post->saveSEO(['schema_jsonld' => $event]);
+
+    Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+        ->fillForm([
+            'seo_schema.blocks' => [
+                ['type' => 'faq', 'questions' => [
+                    ['question' => 'Where?', 'answer' => 'Online.'],
+                    ['question' => 'When?', 'answer' => 'September.'],
+                ]],
+            ],
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $stored = $post->fresh()->seoMeta()->sole()->schema_jsonld;
+
+    // Both the new FAQ block and the untouched Event are kept (as a list).
+    expect($stored)->toBeArray()
+        ->and(array_is_list($stored))->toBeTrue()
+        ->and($stored)->toContain($event);
+
+    $types = array_column($stored, '@type');
+    expect($types)->toContain('FAQPage')->toContain('Event');
+});
+
+it('clears the stored schema when everything is removed', function () {
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $post->saveSEO([
+        'title' => 'Keep me',
+        'schema_jsonld' => FAQSchema::fromArray([
+            ['question' => 'Q?', 'answer' => 'A.'],
+            ['question' => 'Q2?', 'answer' => 'A2.'],
+        ])->toArray(),
+    ]);
+
+    Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+        ->fillForm(['seo_schema.blocks' => []])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $meta = $post->fresh()->seoMeta()->sole();
+
+    expect($meta->schema_jsonld)->toBeNull()
+        ->and($meta->title)->toBe('Keep me');
+});
+
+it('stores multiple documents as a list (breadcrumb + FAQ)', function () {
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->fillForm([
+            'seo_schema.auto_breadcrumb' => true,
+            'seo_schema.blocks' => [
+                ['type' => 'faq', 'questions' => [
+                    ['question' => 'Q?', 'answer' => 'A.'],
+                    ['question' => 'Q2?', 'answer' => 'A2.'],
+                ]],
+            ],
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $stored = $child->fresh()->seoMeta()->sole()->schema_jsonld;
+
+    expect($stored)->toBeArray()
+        ->and(array_is_list($stored))->toBeTrue()
+        ->and($stored)->toHaveCount(2)
+        ->and($stored[0]['@type'])->toBe('BreadcrumbList')
+        ->and($stored[1]['@type'])->toBe('FAQPage');
+});
+
+it('writes nothing when the schema section is left empty', function () {
+    config()->set('seo.features.auto_create_meta', false);
+
+    Livewire::test(CreatePost::class)
+        ->fillForm([
+            'title' => 'Plain',
+            'slug' => 'plain',
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Post::query()->count())->toBe(1)
+        ->and(SEOMeta::query()->count())->toBe(0);
+});

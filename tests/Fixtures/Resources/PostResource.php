@@ -29,6 +29,7 @@ class PostResource extends Resource
             TextInput::make('slug')->required(),
             Textarea::make('content'),
             static::seoSection(),
+            static::seoSchemaSection(),
         ]);
     }
 

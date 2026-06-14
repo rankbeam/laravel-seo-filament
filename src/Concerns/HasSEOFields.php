@@ -6,6 +6,7 @@ namespace Rankbeam\Seo\Filament\Concerns;
 
 use Filament\Schemas\Components\Section;
 use Rankbeam\Seo\Filament\Forms\SEOFields;
+use Rankbeam\Seo\Filament\Forms\SEOSchemaFields;
 
 /**
  * Convenience for Filament resources: adds a ready-made SEO section.
@@ -36,5 +37,15 @@ trait HasSEOFields
     public static function seoSection(?array $only = null): Section
     {
         return SEOFields::make($only);
+    }
+
+    /**
+     * Optional structured-data (schema.org JSON-LD) editor section. Add it
+     * alongside seoSection() when editors should attach FAQ / Product schema
+     * or an automatic breadcrumb without writing code.
+     */
+    public static function seoSchemaSection(): Section
+    {
+        return SEOSchemaFields::make();
     }
 }

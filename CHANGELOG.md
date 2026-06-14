@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Structured-data editor** — an optional `SEOSchemaFields::make()` section
+  (also `static::seoSchemaSection()` via `HasSEOFields`) that lets content
+  editors attach schema.org JSON-LD without code, writing into the core
+  `seo_meta.schema_jsonld` column. It is pure UI binding over the core schema
+  builders: a one-toggle **automatic breadcrumb**
+  (`BreadcrumbSchema::fromModelAncestors()`) plus a repeater of **FAQ**
+  (`FAQSchema`) and **Product** (`ProductSchema`) blocks. Every built document
+  is checked by the core `SchemaValidator` and a malformed block is rejected on
+  save; empty blocks are ignored. Stores a single object or a JSON-LD array
+  (breadcrumb first), and **preserves verbatim** any stored schema it cannot
+  represent (hand-authored `@graph`, exotic `@type`, or richer Product fields)
+  so a save never clobbers code-authored schema. Stays optional — apps opt in by
+  adding the section.
 - **Focus keywords field** — a `TagsInput` in the SEO section persisting to
   `seo_meta.focus_keywords`. Keywords are edited as plain tags but stored in
   the core's structured `[{keyword, is_primary}]` shape (the first tag is

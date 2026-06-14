@@ -20,6 +20,7 @@ return new class extends Migration
 
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('parent_id')->nullable();
             $table->string('title')->nullable();
             $table->string('slug');
             $table->text('content')->nullable();

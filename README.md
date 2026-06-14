@@ -80,9 +80,26 @@ class PostResource extends Resource
 ```
 
 `static::seoSection(['title', 'description'])` limits the section to a subset of fields
-(`title`, `description`, `canonical`, `robots`, `og_image`).
+(`title`, `description`, `focus_keywords`, `canonical`, `robots`, `og_image`).
 
 Without the trait, `SEOFields::make()` returns the same section directly.
+
+## Structured data (optional)
+
+Add a second, optional section so editors can attach schema.org JSON-LD without code:
+
+```php
+static::seoSchemaSection(),     // or SEOSchemaFields::make()
+```
+
+It writes into the core `seo_meta.schema_jsonld` column and is pure UI binding over the
+core schema builders — a one-toggle **automatic breadcrumb**
+(`BreadcrumbSchema::fromModelAncestors()`) plus a repeater of **FAQ** (`FAQSchema`) and
+**Product** (`ProductSchema`) blocks. Every built document is validated by the core
+`SchemaValidator`; a malformed block (e.g. a Product with no offer) is rejected on save.
+Schema it can't represent (a hand-authored `@graph`, an exotic `@type`, richer Product
+fields) is preserved verbatim. See the
+[Filament fields guide](https://github.com/rankbeam/laravel-seo) for details.
 
 ## Testing
 
@@ -91,9 +108,11 @@ composer update --with "filament/filament:~4.0" && vendor/bin/pest   # Filament 
 composer update --with "filament/filament:~5.0" && vendor/bin/pest   # Filament 5 leg
 ```
 
-31 tests / 105 assertions: render, live counter states, create + edit save round-trips
-(including og:image upload), field clearing, URL validation, and source-indicator
-attribution for every resolver layer.
+60 tests: render, live counter states, create + edit save round-trips (including
+og:image upload), field clearing, URL validation, source-indicator attribution for
+every resolver layer, focus-keyword round-trips, and the structured-data editor
+(FAQ / Product build + round-trip, automatic breadcrumb, validation rejection, and
+custom-schema preservation).
 
 ### Testbench note (provider order)
 
