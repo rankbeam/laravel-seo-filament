@@ -515,24 +515,33 @@ class SEOSchemaFields
             $type = $doc['@type'] ?? null;
 
             if ($type === 'BreadcrumbList') {
-                // Provenance, not equality: the editor's only way to author a
-                // top-level BreadcrumbList is the auto toggle, so a stored one
-                // belongs to the toggle whenever the record can still produce a
-                // breadcrumb from its ancestors. Detecting by exact structural
-                // equality would freeze the document as immutable custom schema
-                // the moment an ancestor's title or URL changed (and re-enabling
-                // the toggle would then append a duplicate). Tying it to the
-                // record's current breadcrumb capability instead lets compose()
-                // regenerate it fresh from the live ancestor chain on save.
-                $canRegenerate = $record instanceof Model
-                    && BreadcrumbSchema::fromModelAncestors($record) !== null;
-
-                if ($canRegenerate) {
+                // Provenance by structural skeleton, not by mere capability.
+                //
+                // The editor's ONLY way to author a top-level BreadcrumbList is
+                // the auto toggle, and when that toggle is on compose() always
+                // writes exactly BreadcrumbSchema::fromModelAncestors($record).
+                // So a stored breadcrumb belongs to the toggle iff it has the
+                // same *skeleton* as the one the record currently generates from
+                // its live ancestor chain — the same ordered item URLs (the Home
+                // item included) and the same depth.
+                //
+                // An ancestor rename only changes an item's `name` label, never
+                // the skeleton, so a stale auto-breadcrumb is still recognized
+                // and refreshed by compose() on save — no freeze, no duplicate.
+                // A hand-authored or externally generated (e.g. a Pro AI action)
+                // breadcrumb has a different skeleton — different URLs, depth, or
+                // Home item — so it is NOT claimed and is preserved verbatim as
+                // custom schema, never clobbered by an unrelated save.
+                //
+                // (An earlier fix claimed any breadcrumb whenever the record had
+                // ancestors at all; that misclassified foreign breadcrumbs on a
+                // record that happened to have ancestors — adversarial F5.)
+                if (self::isOwnAutoBreadcrumb($record, $doc)) {
                     $autoBreadcrumb = true;
                 } else {
-                    // No live ancestor chain to regenerate from (e.g. the record
-                    // was detached): preserve the stored breadcrumb verbatim so a
-                    // save can't silently drop it.
+                    // Either no live ancestor chain to regenerate from (e.g. the
+                    // record was detached) or a foreign breadcrumb the editor did
+                    // not author: preserve it verbatim so a save can't drop it.
                     $custom[] = $doc;
                 }
 
@@ -571,6 +580,71 @@ class SEOSchemaFields
             'blocks' => $blocks,
             'custom' => $custom,
         ];
+    }
+
+    /**
+     * Whether a stored top-level BreadcrumbList is one the editor's auto toggle
+     * produced (and may therefore refresh) rather than a foreign document.
+     *
+     * Ownership is decided by comparing the stored breadcrumb's skeleton — its
+     * ordered item URLs (Home included) — against the skeleton of the breadcrumb
+     * the record currently generates from its live ancestor chain. Item `name`
+     * labels are ignored, so an ancestor rename (which changes only labels) is
+     * still recognized as the editor's own; a breadcrumb with different URLs,
+     * a different depth, or a different Home item is foreign and preserved.
+     *
+     * @param  array<string, mixed>  $stored
+     */
+    protected static function isOwnAutoBreadcrumb(?Model $record, array $stored): bool
+    {
+        if (! $record instanceof Model) {
+            return false;
+        }
+
+        $generated = BreadcrumbSchema::fromModelAncestors($record)?->toArray();
+
+        if ($generated === null) {
+            return false;
+        }
+
+        return self::breadcrumbSkeleton($stored) === self::breadcrumbSkeleton($generated);
+    }
+
+    /**
+     * The structural skeleton of a BreadcrumbList: the ordered list of item URLs
+     * (paired with their positions), with `name` labels deliberately dropped so
+     * that an ancestor rename does not change the skeleton. Returns null when the
+     * document is not a recognizable BreadcrumbList shape.
+     *
+     * @param  array<string, mixed>  $doc
+     * @return array<int, array{position: mixed, item: mixed}>|null
+     */
+    protected static function breadcrumbSkeleton(array $doc): ?array
+    {
+        if (($doc['@type'] ?? null) !== 'BreadcrumbList') {
+            return null;
+        }
+
+        $elements = $doc['itemListElement'] ?? null;
+
+        if (! is_array($elements) || ! array_is_list($elements)) {
+            return null;
+        }
+
+        $skeleton = [];
+
+        foreach ($elements as $element) {
+            if (! is_array($element)) {
+                return null;
+            }
+
+            $skeleton[] = [
+                'position' => $element['position'] ?? null,
+                'item' => $element['item'] ?? null,
+            ];
+        }
+
+        return $skeleton;
     }
 
     /**

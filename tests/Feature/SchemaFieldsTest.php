@@ -211,6 +211,73 @@ it('refreshes a stale breadcrumb instead of freezing or duplicating it after an 
         ->and($names)->not->toContain('Docs');
 });
 
+it('preserves a foreign top-level breadcrumb on a record with ancestors across an unrelated save (F5)', function () {
+    // A record that genuinely has ancestors (so it CAN generate its own
+    // breadcrumb) but whose stored breadcrumb was authored elsewhere (different
+    // URLs / depth than the package would produce). An unrelated form save must
+    // leave it byte-for-byte intact instead of overwriting it with the
+    // package's generated version.
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+
+    $foreign = BreadcrumbSchema::fromArray([
+        ['name' => 'Home', 'url' => 'https://example.test/'],
+        ['name' => 'Knowledge Base', 'url' => 'https://example.test/kb'],
+        ['name' => 'How-to', 'url' => 'https://example.test/kb/how-to'],
+        ['name' => 'This Guide', 'url' => 'https://example.test/kb/how-to/guide'],
+    ])->toArray();
+
+    $child->saveSEO(['schema_jsonld' => $foreign]);
+
+    // The toggle must NOT hydrate on for a breadcrumb the editor did not author.
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->assertOk()
+        ->assertSchemaStateSet(['seo_schema.auto_breadcrumb' => false])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $stored = $child->fresh()->seoMeta()->sole()->schema_jsonld;
+
+    // Preserved verbatim — exactly the foreign breadcrumb, no duplicate, not the
+    // package's generated one.
+    expect($stored)->toEqual($foreign);
+});
+
+it('round-trips the breadcrumb toggle off then on without duplicating', function () {
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+
+    // Toggle ON: an auto-breadcrumb is generated and stored.
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->fillForm(['seo_schema.auto_breadcrumb' => true])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($child->fresh()->seoMeta()->sole()->schema_jsonld['@type'])->toBe('BreadcrumbList');
+
+    // Toggle OFF: the auto-breadcrumb (recognized as the editor's own) is
+    // dropped, leaving the column cleared.
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->assertSchemaStateSet(['seo_schema.auto_breadcrumb' => true])
+        ->fillForm(['seo_schema.auto_breadcrumb' => false])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($child->fresh()->seoMeta()->sole()->schema_jsonld)->toBeNull();
+
+    // Toggle ON again: regenerated, exactly one BreadcrumbList — never doubled.
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->assertSchemaStateSet(['seo_schema.auto_breadcrumb' => false])
+        ->fillForm(['seo_schema.auto_breadcrumb' => true])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $stored = $child->fresh()->seoMeta()->sole()->schema_jsonld;
+
+    expect($stored['@type'])->toBe('BreadcrumbList')
+        ->and($stored)->toEqual(BreadcrumbSchema::fromModelAncestors($child->fresh())->toArray());
+});
+
 it('rejects a Product block with no image or offer', function () {
     Livewire::test(CreatePost::class)
         ->fillForm([

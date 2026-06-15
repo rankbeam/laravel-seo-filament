@@ -100,6 +100,37 @@ it('keeps a breadcrumb on the toggle after an ancestor is renamed (provenance, n
         ->and(array_column($composed['itemListElement'], 'name'))->not->toContain('Docs');
 });
 
+it('preserves a foreign top-level breadcrumb on a record that has ancestors (F5)', function () {
+    // The record has a live ancestor chain, so the *old* logic would have
+    // claimed ANY stored BreadcrumbList as the editor's auto-breadcrumb and
+    // overwritten it from the ancestors on save. But this breadcrumb was
+    // hand-authored (or written by a Pro AI action): it has different URLs and
+    // a different depth than the one the record generates. It must be detected
+    // as foreign by structural skeleton and preserved verbatim as custom.
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+
+    $foreign = BreadcrumbSchema::fromArray([
+        ['name' => 'Home', 'url' => 'https://example.test/'],
+        ['name' => 'Knowledge Base', 'url' => 'https://example.test/kb'],
+        ['name' => 'How-to', 'url' => 'https://example.test/kb/how-to'],
+        ['name' => 'This Guide', 'url' => 'https://example.test/kb/how-to/guide'],
+    ])->toArray();
+
+    // Sanity: the record DOES currently generate its own (different) breadcrumb.
+    expect(BreadcrumbSchema::fromModelAncestors($child))->not->toBeNull();
+
+    $state = SEOSchemaFields::decompose($child, $foreign);
+
+    expect($state['auto_breadcrumb'])->toBeFalse()
+        ->and($state['blocks'])->toBe([])
+        ->and($state['custom'])->toBe([$foreign]);
+
+    // An unrelated save (no toggle) must keep the foreign breadcrumb verbatim,
+    // never replacing it with the package's generated version.
+    expect(SEOSchemaFields::compose($child, $state))->toEqual($foreign);
+});
+
 it('preserves a breadcrumb verbatim when the record can no longer generate one', function () {
     // A breadcrumb document but a record with no ancestors (and thus no live
     // chain to regenerate from): it must round-trip as custom, never silently
