@@ -277,6 +277,44 @@ it('preserves stored schema it cannot represent', function () {
     expect($types)->toContain('FAQPage')->toContain('Event');
 });
 
+it('does not clobber a schema document written concurrently after the form hydrated', function () {
+    // The page starts with an editor-authored FAQ.
+    $faq = FAQSchema::fromArray([
+        ['question' => 'Original?', 'answer' => 'Yes.'],
+        ['question' => 'Second?', 'answer' => 'Also yes.'],
+    ])->toArray();
+
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $post->saveSEO(['schema_jsonld' => $faq]);
+
+    // The editor opens (hydrates, snapshotting the column as it stands now).
+    $component = Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+        ->assertOk();
+
+    // Meanwhile, a concurrent process (e.g. the Pro dashboard's AI schema
+    // action) writes a NEW document into the same column.
+    $aiArticle = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Article',
+        'headline' => 'AI generated headline',
+    ];
+    $post->saveSEO(['schema_jsonld' => [$faq, $aiArticle]]);
+
+    // The stale form is saved without touching the schema section.
+    $component->call('save')->assertHasNoFormErrors();
+
+    $stored = $post->fresh()->seoMeta()->sole()->schema_jsonld;
+
+    // The concurrently-added Article survives; the editor's FAQ is still there.
+    expect($stored)->toBeArray()
+        ->and(array_is_list($stored))->toBeTrue()
+        ->and($stored)->toContain($aiArticle)
+        ->and($stored)->toContain($faq);
+
+    $types = array_column($stored, '@type');
+    expect($types)->toContain('FAQPage')->toContain('Article');
+});
+
 it('clears the stored schema when everything is removed', function () {
     $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
     $post->saveSEO([

@@ -85,7 +85,11 @@ class SEOSchemaFields
                             ? ($record->seoMetaForLocale(app()->getLocale())->first()?->schema_jsonld)
                             : null;
 
-                        $component->getChildSchema()->fill(self::decompose($record, $stored));
+                        $component->getChildSchema()->fill(self::decompose($record, $stored) + [
+                            // Snapshot of what was in the column when the form
+                            // opened, for the optimistic-concurrency check on save.
+                            'original' => self::normalizeStored($stored),
+                        ]);
                     })
                     ->saveRelationshipsUsing(function (Group $component, Model $record): void {
                         if (! method_exists($record, 'seoMeta')) {
@@ -99,6 +103,16 @@ class SEOSchemaFields
                         $existing = method_exists($record, 'seoMetaForLocale')
                             ? $record->seoMetaForLocale($locale)->first()
                             : $record->seoMeta()->where('locale', $locale)->first();
+
+                        // Optimistic concurrency: if the column changed since the
+                        // form hydrated (a concurrent external write — e.g. the Pro
+                        // dashboard's AI schema action), reconcile so newer
+                        // documents this form never saw are not clobbered.
+                        $value = self::reconcile(
+                            $value,
+                            $existing?->schema_jsonld,
+                            is_array($state['original'] ?? null) ? $state['original'] : [],
+                        );
 
                         if ($existing) {
                             $existing->update(['schema_jsonld' => $value]);
@@ -205,6 +219,15 @@ class SEOSchemaFields
             // parent Group's dehydrated(false) keeps it out of the model save.
             Hidden::make('custom')
                 ->default([]),
+
+            // Optimistic-concurrency baseline: the set of documents present in
+            // schema_jsonld at hydration, captured as a flat list. On save it
+            // lets the editor tell apart "documents I started from" from
+            // "documents a concurrent process (e.g. the Pro dashboard's AI
+            // action) added while this form was open" so the latter are not
+            // clobbered. Never shown to the editor.
+            Hidden::make('original')
+                ->default([]),
         ];
     }
 
@@ -252,6 +275,93 @@ class SEOSchemaFields
             1 => $docs[0],
             default => $docs,
         };
+    }
+
+    /**
+     * Optimistic-concurrency reconciliation.
+     *
+     * The editor preserves unrepresentable schema only as a *hydration snapshot*
+     * (the `custom` field). If another process writes `schema_jsonld` while the
+     * form is open — for example the Pro dashboard's AI schema action — a naive
+     * save would replace the column from that stale snapshot and silently delete
+     * the newer document. This compares the column as it stands *now* against the
+     * baseline captured at hydration: any document that appeared since (present
+     * in `$current` but not in `$original`) is treated as a concurrent external
+     * write and appended to the value this form intends to save, so newer data is
+     * never lost. Documents the editor itself produced are not duplicated.
+     *
+     * @param  array<string, mixed>|array<int, array<string, mixed>>|null  $composed  what this form wants to save
+     * @param  mixed  $current  the column value as it stands in the DB right now
+     * @param  array<int, mixed>  $original  the documents present when the form hydrated
+     * @return array<string, mixed>|array<int, array<string, mixed>>|null
+     */
+    public static function reconcile(?array $composed, mixed $current, array $original): ?array
+    {
+        $currentDocs = self::normalizeStored($current);
+
+        // Fast path: the column is untouched since hydration, nothing to merge.
+        if (self::sameDocumentSet($currentDocs, $original)) {
+            return $composed;
+        }
+
+        // Find documents that appeared concurrently (in the DB now, but not in
+        // the baseline) and that this form is not already about to write.
+        $result = self::normalizeStored($composed);
+
+        foreach ($currentDocs as $doc) {
+            if (! is_array($doc) || $doc === []) {
+                continue;
+            }
+
+            if (self::containsDocument($original, $doc) || self::containsDocument($result, $doc)) {
+                continue;
+            }
+
+            $result[] = $doc;
+        }
+
+        return match (count($result)) {
+            0 => null,
+            1 => $result[0],
+            default => array_values($result),
+        };
+    }
+
+    /**
+     * Whether two document lists hold the same set (order-independent).
+     *
+     * @param  array<int, mixed>  $a
+     * @param  array<int, mixed>  $b
+     */
+    protected static function sameDocumentSet(array $a, array $b): bool
+    {
+        if (count($a) !== count($b)) {
+            return false;
+        }
+
+        foreach ($a as $doc) {
+            if (! self::containsDocument($b, $doc)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether $haystack already contains a document equal to $needle.
+     *
+     * @param  array<int, mixed>  $haystack
+     */
+    protected static function containsDocument(array $haystack, mixed $needle): bool
+    {
+        foreach ($haystack as $doc) {
+            if ($doc == $needle) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
