@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Widened the core constraint to `rankbeam/laravel-seo` `^2.0 || ^3.0`** so
+  the package installs against both Core 2 and Core 3. Tag and publish this
+  release **before** Core 3 so registry users are never left with an
+  unsatisfiable middle (release order: Filament widened → Core 3 → Pro 2).
+
 ### Added
 
 - **Structured-data editor** — an optional `SEOSchemaFields::make()` section
