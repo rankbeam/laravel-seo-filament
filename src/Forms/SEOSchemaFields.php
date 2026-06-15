@@ -405,13 +405,24 @@ class SEOSchemaFields
             $type = $doc['@type'] ?? null;
 
             if ($type === 'BreadcrumbList') {
-                $auto = $record instanceof Model
-                    ? BreadcrumbSchema::fromModelAncestors($record)?->toArray()
-                    : null;
+                // Provenance, not equality: the editor's only way to author a
+                // top-level BreadcrumbList is the auto toggle, so a stored one
+                // belongs to the toggle whenever the record can still produce a
+                // breadcrumb from its ancestors. Detecting by exact structural
+                // equality would freeze the document as immutable custom schema
+                // the moment an ancestor's title or URL changed (and re-enabling
+                // the toggle would then append a duplicate). Tying it to the
+                // record's current breadcrumb capability instead lets compose()
+                // regenerate it fresh from the live ancestor chain on save.
+                $canRegenerate = $record instanceof Model
+                    && BreadcrumbSchema::fromModelAncestors($record) !== null;
 
-                if ($auto !== null && $auto == $doc) {
+                if ($canRegenerate) {
                     $autoBreadcrumb = true;
                 } else {
+                    // No live ancestor chain to regenerate from (e.g. the record
+                    // was detached): preserve the stored breadcrumb verbatim so a
+                    // save can't silently drop it.
                     $custom[] = $doc;
                 }
 

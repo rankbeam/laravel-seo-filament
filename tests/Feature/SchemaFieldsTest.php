@@ -184,6 +184,33 @@ it('hydrates the breadcrumb toggle back on for an auto-generated breadcrumb', fu
         ->assertSchemaStateSet(['seo_schema.auto_breadcrumb' => true]);
 });
 
+it('refreshes a stale breadcrumb instead of freezing or duplicating it after an ancestor rename', function () {
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+    $child->saveSEO(['schema_jsonld' => BreadcrumbSchema::fromModelAncestors($child)->toArray()]);
+
+    // Ancestor renamed after the breadcrumb was first stored.
+    $parent->update(['title' => 'Documentation']);
+
+    // The toggle still hydrates on (provenance), and a plain save regenerates
+    // the breadcrumb from the current ancestor chain - no duplicate document.
+    Livewire::test(EditPost::class, ['record' => $child->getRouteKey()])
+        ->assertOk()
+        ->assertSchemaStateSet(['seo_schema.auto_breadcrumb' => true])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $stored = $child->fresh()->seoMeta()->sole()->schema_jsonld;
+
+    // Exactly one BreadcrumbList, carrying the renamed ancestor.
+    expect($stored['@type'])->toBe('BreadcrumbList');
+
+    $names = array_column($stored['itemListElement'], 'name');
+
+    expect($names)->toContain('Documentation')
+        ->and($names)->not->toContain('Docs');
+});
+
 it('rejects a Product block with no image or offer', function () {
     Livewire::test(CreatePost::class)
         ->fillForm([

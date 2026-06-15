@@ -73,6 +73,53 @@ it('recognizes an auto-generated breadcrumb and flips the toggle', function () {
         ->and($state['custom'])->toBe([]);
 });
 
+it('keeps a breadcrumb on the toggle after an ancestor is renamed (provenance, not equality)', function () {
+    $parent = Post::query()->create(['title' => 'Docs', 'slug' => 'docs']);
+    $child = Post::query()->create(['title' => 'Guide', 'slug' => 'guide', 'parent_id' => $parent->id]);
+
+    // Breadcrumb stored while the ancestor was still called "Docs".
+    $stored = BreadcrumbSchema::fromModelAncestors($child)->toArray();
+
+    // The ancestor is later renamed, so the stored document no longer matches a
+    // freshly generated one. Exact-equality detection would freeze it as
+    // immutable custom schema; provenance keeps it on the toggle.
+    $parent->update(['title' => 'Documentation']);
+    $child->setRelation('parent', $parent->fresh());
+
+    $state = SEOSchemaFields::decompose($child, $stored);
+
+    expect($state['auto_breadcrumb'])->toBeTrue()
+        ->and($state['custom'])->toBe([]);
+
+    // compose() regenerates from the live ancestor chain: the new name wins and
+    // the breadcrumb is never duplicated.
+    $composed = SEOSchemaFields::compose($child, $state);
+
+    expect($composed['@type'])->toBe('BreadcrumbList')
+        ->and(array_column($composed['itemListElement'], 'name'))->toContain('Documentation')
+        ->and(array_column($composed['itemListElement'], 'name'))->not->toContain('Docs');
+});
+
+it('preserves a breadcrumb verbatim when the record can no longer generate one', function () {
+    // A breadcrumb document but a record with no ancestors (and thus no live
+    // chain to regenerate from): it must round-trip as custom, never silently
+    // dropped on the next save.
+    $orphan = Post::query()->create(['title' => 'Orphan', 'slug' => 'orphan']);
+
+    $stored = BreadcrumbSchema::fromArray([
+        ['name' => 'Home', 'url' => 'https://example.test/'],
+        ['name' => 'Orphan', 'url' => 'https://example.test/orphan'],
+    ])->toArray();
+
+    $state = SEOSchemaFields::decompose($orphan, $stored);
+
+    expect($state['auto_breadcrumb'])->toBeFalse()
+        ->and($state['blocks'])->toBe([])
+        ->and($state['custom'])->toBe([$stored]);
+
+    expect(SEOSchemaFields::compose($orphan, $state))->toEqual($stored);
+});
+
 it('preserves a document it cannot represent as custom', function () {
     $event = [
         '@context' => 'https://schema.org',
