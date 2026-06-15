@@ -27,7 +27,7 @@ relationship — no extra columns on your tables.
 |---|---|
 | PHP | 8.2 – 8.4 |
 | Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
-| Core package | `rankbeam/laravel-seo` ^2.0 |
+| Core package | `rankbeam/laravel-seo` ^2.0 \|\| ^3.0 |
 
 ## Installation
 
@@ -108,11 +108,12 @@ composer update --with "filament/filament:~4.0" && vendor/bin/pest   # Filament 
 composer update --with "filament/filament:~5.0" && vendor/bin/pest   # Filament 5 leg
 ```
 
-60 tests: render, live counter states, create + edit save round-trips (including
-og:image upload), field clearing, URL validation, source-indicator attribution for
-every resolver layer, focus-keyword round-trips, and the structured-data editor
-(FAQ / Product build + round-trip, automatic breadcrumb, validation rejection, and
-custom-schema preservation).
+The suite covers render, live counter states, create + edit save round-trips
+(including og:image upload), field clearing, URL validation, source-indicator
+attribution for every resolver layer, focus-keyword round-trips, and the
+structured-data editor (FAQ / Product build + round-trip, automatic breadcrumb,
+validation rejection, optimistic-concurrency reconciliation, and custom-schema
+preservation).
 
 ### Testbench note (provider order)
 

@@ -61,8 +61,9 @@ class SEOSchemaFields
 {
     /**
      * Virtual form state path (NOT a column). The section reads/writes
-     * `seo_meta.schema_jsonld` directly in its hydrate/save hooks, so this path
-     * is dehydrated and only namespaces the editor's working state.
+     * `seo_meta.schema_jsonld` directly in its hydrate/save hooks, so the Group
+     * is marked `dehydrated(false)` (its state is kept out of the model save)
+     * and this path only namespaces the editor's working state.
      */
     public const STATE_PATH = 'seo_schema';
 
