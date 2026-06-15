@@ -80,8 +80,8 @@ class SEOSchemaFields
                     ->dehydrated(false)
                     ->columnSpanFull()
                     ->afterStateHydrated(function (Group $component, ?Model $record): void {
-                        $stored = $record && method_exists($record, 'seoMeta')
-                            ? ($record->seoMeta?->schema_jsonld)
+                        $stored = $record && method_exists($record, 'seoMetaForLocale')
+                            ? ($record->seoMetaForLocale(app()->getLocale())->first()?->schema_jsonld)
                             : null;
 
                         $component->getChildSchema()->fill(self::decompose($record, $stored));
@@ -94,14 +94,17 @@ class SEOSchemaFields
                         $state = $component->getChildSchema()->getState();
                         $value = self::compose($record, $state);
 
-                        $existing = $record->seoMeta()->first();
+                        $locale = app()->getLocale();
+                        $existing = method_exists($record, 'seoMetaForLocale')
+                            ? $record->seoMetaForLocale($locale)->first()
+                            : $record->seoMeta()->where('locale', $locale)->first();
 
                         if ($existing) {
                             $existing->update(['schema_jsonld' => $value]);
                         } elseif ($value !== null) {
                             $record->seoMeta()->create([
                                 'schema_jsonld' => $value,
-                                'locale' => app()->getLocale(),
+                                'locale' => $locale,
                             ]);
                         }
 

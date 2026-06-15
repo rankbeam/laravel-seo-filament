@@ -96,7 +96,9 @@ class SEOFields
                     ->dehydrated(false)
                     ->columnSpanFull()
                     ->afterStateHydrated(function (Group $component, ?Model $record) use ($only): void {
-                        $meta = $record && method_exists($record, 'seoMeta') ? $record->seoMeta : null;
+                        $meta = $record && method_exists($record, 'seoMetaForLocale')
+                            ? $record->seoMetaForLocale(app()->getLocale())->first()
+                            : null;
 
                         $state = $meta?->only($only) ?: [];
 
@@ -137,12 +139,15 @@ class SEOFields
                             })
                             ->all();
 
-                        $existing = $record->seoMeta()->first();
+                        $locale = app()->getLocale();
+                        $existing = method_exists($record, 'seoMetaForLocale')
+                            ? $record->seoMetaForLocale($locale)->first()
+                            : $record->seoMeta()->where('locale', $locale)->first();
 
                         if ($existing) {
                             $existing->update($state);
                         } elseif (array_filter($state) !== []) {
-                            $record->seoMeta()->create($state + ['locale' => app()->getLocale()]);
+                            $record->seoMeta()->create($state + ['locale' => $locale]);
                         }
 
                         $record->unsetRelation('seoMeta');

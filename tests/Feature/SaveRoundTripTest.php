@@ -56,6 +56,27 @@ it('round-trips SEO values through the edit page', function () {
         ->and($meta->robots)->toBe('index, nofollow');
 });
 
+it('edits only the current locale seo meta row', function () {
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $post->saveSEO(['title' => 'English title', 'description' => 'English description.'], 'en');
+    $post->saveSEO(['title' => 'Titre français', 'description' => 'Description française.'], 'fr');
+
+    app()->setLocale('fr');
+
+    Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+        ->fillForm([
+            'seo_meta.title' => 'Titre français modifié',
+            'seo_meta.description' => 'Description française modifiée.',
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($post->fresh()->seoMetaForLocale('en')->first()->title)->toBe('English title')
+        ->and($post->fresh()->seoMetaForLocale('en')->first()->description)->toBe('English description.')
+        ->and($post->fresh()->seoMetaForLocale('fr')->first()->title)->toBe('Titre français modifié')
+        ->and($post->fresh()->seoMetaForLocale('fr')->first()->description)->toBe('Description française modifiée.');
+});
+
 it('clears a stored value when the field is emptied', function () {
     $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
     $post->saveSEO(['title' => 'To be removed', 'description' => 'Keep me.']);

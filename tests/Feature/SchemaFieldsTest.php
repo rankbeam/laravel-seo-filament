@@ -62,6 +62,43 @@ it('round-trips a stored FAQ document unchanged through the edit page', function
     expect($post->fresh()->seoMeta()->sole()->schema_jsonld)->toEqual($stored);
 });
 
+it('edits schema only on the current locale seo meta row', function () {
+    $english = FAQSchema::fromArray([
+        ['question' => 'English question?', 'answer' => 'English answer.'],
+        ['question' => 'Another English question?', 'answer' => 'Another English answer.'],
+    ])->toArray();
+    $french = FAQSchema::fromArray([
+        ['question' => 'Question française?', 'answer' => 'Réponse française.'],
+        ['question' => 'Autre question française?', 'answer' => 'Autre réponse française.'],
+    ])->toArray();
+
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+    $post->saveSEO(['schema_jsonld' => $english], 'en');
+    $post->saveSEO(['schema_jsonld' => $french], 'fr');
+
+    app()->setLocale('fr');
+
+    Livewire::test(EditPost::class, ['record' => $post->getRouteKey()])
+        ->fillForm([
+            'seo_schema.blocks' => [
+                ['type' => 'faq', 'questions' => [
+                    ['question' => 'Question française modifiée?', 'answer' => 'Réponse française modifiée.'],
+                    ['question' => 'Autre question française modifiée?', 'answer' => 'Autre réponse française modifiée.'],
+                ]],
+            ],
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $updatedFrench = FAQSchema::fromArray([
+        ['question' => 'Question française modifiée?', 'answer' => 'Réponse française modifiée.'],
+        ['question' => 'Autre question française modifiée?', 'answer' => 'Autre réponse française modifiée.'],
+    ])->toArray();
+
+    expect($post->fresh()->seoMetaForLocale('en')->first()->schema_jsonld)->toEqual($english)
+        ->and($post->fresh()->seoMetaForLocale('fr')->first()->schema_jsonld)->toEqual($updatedFrench);
+});
+
 it('builds and stores a Product document from the repeater', function () {
     Livewire::test(CreatePost::class)
         ->fillForm([
