@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // T4 target-abstraction fixtures: an Article whose canonical SEO lives
+        // Target-abstraction fixtures: an Article whose canonical SEO lives
         // on a RELATED PublicPage. Article itself does NOT use HasSEO, so the
         // test can prove the form writes to the page and never to the article.
         Schema::create('articles', function (Blueprint $table) {

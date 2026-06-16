@@ -9,7 +9,7 @@ use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Post;
 use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
 /**
- * T5 — the server-side preview payload. The dimension-detection and
+ * The server-side preview payload. The dimension-detection and
  * manual-vs-fallback image-source logic is the testable "warning payload"
  * behind the live preview; it must use the shared evaluator thresholds.
  */

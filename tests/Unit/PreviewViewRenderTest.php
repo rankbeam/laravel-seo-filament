@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Rankbeam\Seo\Filament\Support\SEOPreviewData;
 
 /**
- * T5 — render the preview view directly (no Livewire) for both the
+ * Render the preview view directly (no Livewire) for both the
  * og_image-editable and og_image-excluded branches, proving the
  * `@if($previewHasImageField)` Blade branches inside the Alpine `x-data`
  * both produce a renderable component.

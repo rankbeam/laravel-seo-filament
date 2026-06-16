@@ -9,7 +9,7 @@ use Rankbeam\Seo\Services\Schema\BreadcrumbSchema;
 use Rankbeam\Seo\Services\Schema\ProductSchema;
 
 /*
- * RT10 carry-forward proof: a document the Pro AI schema suggestion builds with
+ * Carry-forward proof: a document the Pro AI schema suggestion builds with
  * the core builders and writes into seo_meta.schema_jsonld must round-trip
  * through this editor unchanged - a Product becomes an editable block, an
  * Article (no editor block) is preserved verbatim, and an ancestor breadcrumb

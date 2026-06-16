@@ -12,7 +12,7 @@ use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\CreatePost
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\EditPost;
 
 /**
- * T5 — the editorial preview is a tabbed (Google SERP / social card) live
+ * The editorial preview is a tabbed (Google SERP / social card) live
  * editor that replaces the old search-only snippet.
  */
 it('renders both preview tabs and the social card on the edit page', function () {

@@ -10,7 +10,7 @@ use Rankbeam\Seo\Traits\HasSEO;
 
 /**
  * The model that actually carries the SEO metadata. An {@see Article} edits
- * its SEO through a related PublicPage (the T4 target-abstraction scenario).
+ * its SEO through a related PublicPage (the target-abstraction scenario).
  */
 class PublicPage extends Model
 {

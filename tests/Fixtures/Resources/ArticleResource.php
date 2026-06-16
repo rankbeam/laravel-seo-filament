@@ -12,7 +12,7 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Article;
 
 /**
- * T4 acceptance fixture: a resource for {@see Article} that edits the SEO of a
+ * Acceptance fixture: a resource for {@see Article} that edits the SEO of a
  * RELATED model (its PublicPage). The same `target` resolver drives both the
  * SEO fields and the structured-data section, so they act on one consistent
  * model. Article itself never gets a seo_meta row.

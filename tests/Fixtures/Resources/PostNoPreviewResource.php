@@ -11,7 +11,7 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Post;
 
 /**
- * T5 opt-out fixture: the SEO section with the tabbed preview disabled via
+ * Opt-out fixture: the SEO section with the tabbed preview disabled via
  * `showPreview: false`. The source-indicators panel still renders.
  */
 class PostNoPreviewResource extends Resource

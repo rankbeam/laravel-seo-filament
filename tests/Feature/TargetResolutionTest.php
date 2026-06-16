@@ -13,7 +13,7 @@ use Rankbeam\Seo\Services\Schema\BreadcrumbSchema;
 use Rankbeam\Seo\Services\Schema\FAQSchema;
 
 /**
- * T4 — a Filament resource for model A edits the SEO of a RELATED model B
+ * A Filament resource for model A edits the SEO of a RELATED model B
  * (the form's own record never gets a seo_meta row). These cover the F4/F5
  * scenarios: create / edit / clear / locale / missing-target.
  */
