@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
 use Rankbeam\Seo\Filament\Forms\Rules\ValidSchemaBlocks;
+use Rankbeam\Seo\Filament\Support\ResolvesSeoTarget;
 use Rankbeam\Seo\Services\Schema\BreadcrumbSchema;
 use Rankbeam\Seo\Services\Schema\FAQSchema;
 use Rankbeam\Seo\Services\Schema\ProductSchema;
@@ -59,6 +60,8 @@ use Rankbeam\Seo\Services\Schema\SchemaValidator;
  */
 class SEOSchemaFields
 {
+    use ResolvesSeoTarget;
+
     /**
      * Virtual form state path (NOT a column). The section reads/writes
      * `seo_meta.schema_jsonld` directly in its hydrate/save hooks, so the Group
@@ -70,7 +73,13 @@ class SEOSchemaFields
     /** schema.org availability tokens offered for a Product offer. */
     public const AVAILABILITY = ['InStock', 'OutOfStock', 'PreOrder', 'BackOrder', 'Discontinued'];
 
-    public static function make(): Section
+    /**
+     * @param  \Closure|null  $target  Closure(?Model $formRecord): ?Model — write the
+     *                                 schema onto a RELATED model instead of the form's
+     *                                 own record. Null binds the form's record (default).
+     *                                 Must resolve the SAME target as {@see SEOFields}.
+     */
+    public static function make(?\Closure $target = null): Section
     {
         return Section::make('Structured data')
             ->icon('heroicon-o-code-bracket-square')
@@ -80,29 +89,34 @@ class SEOSchemaFields
                     ->statePath(self::STATE_PATH)
                     ->dehydrated(false)
                     ->columnSpanFull()
-                    ->afterStateHydrated(function (Group $component, ?Model $record): void {
-                        $stored = $record && method_exists($record, 'seoMetaForLocale')
-                            ? ($record->seoMetaForLocale(app()->getLocale())->first()?->schema_jsonld)
+                    ->afterStateHydrated(function (Group $component, ?Model $record) use ($target): void {
+                        $target = self::resolveSeoTarget($target, $record, $component);
+
+                        $stored = $target instanceof Model
+                            ? self::currentMeta($target, app()->getLocale())?->schema_jsonld
                             : null;
 
-                        $component->getChildSchema()->fill(self::decompose($record, $stored) + [
+                        $component->getChildSchema()->fill(self::decompose($target, $stored) + [
                             // Snapshot of what was in the column when the form
                             // opened, for the optimistic-concurrency check on save.
                             'original' => self::normalizeStored($stored),
                         ]);
                     })
-                    ->saveRelationshipsUsing(function (Group $component, Model $record): void {
-                        if (! method_exists($record, 'seoMeta')) {
+                    ->saveRelationshipsUsing(function (Group $component, ?Model $record) use ($target): void {
+                        $target = self::resolveSeoTarget($target, $record, $component);
+
+                        // Null target (create form / not-yet-existing relation)
+                        // or a model without the HasSEO contract: write nothing,
+                        // and never auto-create a placeholder related model.
+                        if (! $target instanceof Model || ! method_exists($target, 'seoMeta')) {
                             return;
                         }
 
                         $state = $component->getChildSchema()->getState();
-                        $value = self::compose($record, $state);
+                        $value = self::compose($target, $state);
 
                         $locale = app()->getLocale();
-                        $existing = method_exists($record, 'seoMetaForLocale')
-                            ? $record->seoMetaForLocale($locale)->first()
-                            : $record->seoMeta()->where('locale', $locale)->first();
+                        $existing = self::currentMeta($target, $locale);
 
                         // Optimistic concurrency: if the column changed since the
                         // form hydrated (a concurrent external write — e.g. the Pro
@@ -117,13 +131,13 @@ class SEOSchemaFields
                         if ($existing) {
                             $existing->update(['schema_jsonld' => $value]);
                         } elseif ($value !== null) {
-                            $record->seoMeta()->create([
+                            $target->seoMeta()->create([
                                 'schema_jsonld' => $value,
                                 'locale' => $locale,
                             ]);
                         }
 
-                        $record->unsetRelation('seoMeta');
+                        $target->unsetRelation('seoMeta');
                     }),
             ])
             ->collapsible()
@@ -229,6 +243,13 @@ class SEOSchemaFields
             Hidden::make('original')
                 ->default([]),
         ];
+    }
+
+    protected static function currentMeta(Model $target, string $locale): ?Model
+    {
+        return method_exists($target, 'seoMetaForLocale')
+            ? $target->seoMetaForLocale($locale)->first()
+            : $target->seoMeta()->where('locale', $locale)->first();
     }
 
     // -----------------------------------------------------------------

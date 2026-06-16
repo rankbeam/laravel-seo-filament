@@ -16,6 +16,8 @@ use Filament\Schemas\Components\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
+use Rankbeam\Seo\Filament\Support\ResolvesSeoTarget;
+use Rankbeam\Seo\Filament\Support\SEOPreviewData;
 use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
 /**
@@ -44,6 +46,8 @@ use Rankbeam\Seo\Services\SEOWarningEvaluator;
  */
 class SEOFields
 {
+    use ResolvesSeoTarget;
+
     public const FIELDS = ['title', 'description', 'focus_keywords', 'canonical', 'robots', 'og_image'];
 
     /** @var array<string, array<int, \Closure(Field): ?Field>> */
@@ -72,33 +76,49 @@ class SEOFields
 
     /**
      * @param  array<int, string>|null  $only  Subset of self::FIELDS to show
+     * @param  \Closure|null  $target  Closure(?Model $formRecord): ?Model — edit the
+     *                                 SEO of a RELATED model instead of the form's own
+     *                                 record. Null binds the form's record (default).
+     * @param  bool  $showPreview  Render the tabbed (Google SERP / social card) live
+     *                             preview. Default on; pass false to omit it.
      */
-    public static function make(?array $only = null): Section
+    public static function make(?array $only = null, ?\Closure $target = null, bool $showPreview = true): Section
     {
         $only ??= self::FIELDS;
 
+        $preview = $showPreview
+            ? [
+                View::make('seo-filament::seo-snippet-preview')
+                    ->model(fn (View $component): ?Model => self::resolveSeoTargetFromContainer($target, $component))
+                    ->viewData(fn (?Model $record): array => [
+                        'preview' => app(SEOPreviewData::class)->forModel($record),
+                        'previewHasImageField' => in_array('og_image', $only, true),
+                    ])
+                    ->columnSpanFull(),
+            ]
+            : [];
+
         return Section::make('SEO')
             ->icon('heroicon-o-magnifying-glass')
-            ->description('Search engine and social sharing metadata. Empty fields fall back to values derived from the content.')
             ->schema([
                 Group::make([
                     Group::make(array_values(Arr::only(self::fields(), $only)))
                         ->columns(2)
                         ->columnSpanFull(),
 
-                    View::make('seo-filament::seo-snippet-preview')
-                        ->columnSpanFull(),
+                    ...$preview,
 
                     View::make('seo-filament::seo-source-indicators')
+                        ->model(fn (View $component): ?Model => self::resolveSeoTargetFromContainer($target, $component))
                         ->columnSpanFull(),
                 ])
                     ->statePath('seo_meta')
                     ->dehydrated(false)
                     ->columnSpanFull()
-                    ->afterStateHydrated(function (Group $component, ?Model $record) use ($only): void {
-                        $meta = $record && method_exists($record, 'seoMetaForLocale')
-                            ? $record->seoMetaForLocale(app()->getLocale())->first()
-                            : null;
+                    ->afterStateHydrated(function (Group $component, ?Model $record) use ($only, $target): void {
+                        $target = self::resolveSeoTarget($target, $record, $component);
+
+                        $meta = $target instanceof Model ? self::currentMeta($target, app()->getLocale()) : null;
 
                         $state = $meta?->only($only) ?: [];
 
@@ -110,8 +130,13 @@ class SEOFields
 
                         $component->getChildSchema()->fill($state);
                     })
-                    ->saveRelationshipsUsing(function (Group $component, Model $record) use ($only): void {
-                        if (! method_exists($record, 'seoMeta')) {
+                    ->saveRelationshipsUsing(function (Group $component, ?Model $record) use ($only, $target): void {
+                        $target = self::resolveSeoTarget($target, $record, $component);
+
+                        // Null target (create form / not-yet-existing relation)
+                        // or a model without the HasSEO contract: nothing to
+                        // write, and we never auto-create a placeholder.
+                        if (! $target instanceof Model || ! method_exists($target, 'seoMeta')) {
                             return;
                         }
 
@@ -140,17 +165,15 @@ class SEOFields
                             ->all();
 
                         $locale = app()->getLocale();
-                        $existing = method_exists($record, 'seoMetaForLocale')
-                            ? $record->seoMetaForLocale($locale)->first()
-                            : $record->seoMeta()->where('locale', $locale)->first();
+                        $existing = self::currentMeta($target, $locale);
 
                         if ($existing) {
                             $existing->update($state);
                         } elseif (array_filter($state) !== []) {
-                            $record->seoMeta()->create($state + ['locale' => $locale]);
+                            $target->seoMeta()->create($state + ['locale' => $locale]);
                         }
 
-                        $record->unsetRelation('seoMeta');
+                        $target->unsetRelation('seoMeta');
                     }),
             ])
             ->collapsible()
@@ -243,6 +266,13 @@ class SEOFields
             SEOWarningEvaluator::TITLE_MAX_LENGTH,
             app(SEOWarningEvaluator::class)->evaluateTitle($state, $state),
         );
+    }
+
+    protected static function currentMeta(Model $target, string $locale): ?Model
+    {
+        return method_exists($target, 'seoMetaForLocale')
+            ? $target->seoMetaForLocale($locale)->first()
+            : $target->seoMeta()->where('locale', $locale)->first();
     }
 
     protected static function descriptionCounter(?string $state): HtmlString

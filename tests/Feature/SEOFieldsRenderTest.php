@@ -2,10 +2,15 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Livewire\Livewire;
+use Rankbeam\Seo\Filament\Forms\SEOFields;
+use Rankbeam\Seo\Filament\Forms\SEOSchemaFields;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Post;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\CreatePost;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\EditPost;
+use Rankbeam\Seo\Models\SEOMeta;
 
 it('renders the SEO section on the create page', function () {
     Livewire::test(CreatePost::class)
@@ -52,4 +57,33 @@ it('hydrates stored seo_meta values into the form on edit', function () {
             'seo_meta.robots' => 'noindex, follow',
             'seo_meta.canonical' => 'https://example.test/custom-canonical',
         ]);
+});
+
+it('can read seo meta from a core-2-style target without seoMetaForLocale()', function () {
+    $target = new class extends Model
+    {
+        protected $table = 'posts';
+
+        protected $guarded = [];
+
+        public function seoMeta(): MorphOne
+        {
+            return $this->morphOne(SEOMeta::class, 'seoable');
+        }
+    };
+    $target->forceFill(['title' => 'Legacy', 'slug' => 'legacy'])->save();
+
+    $meta = $target->seoMeta()->create([
+        'locale' => 'en',
+        'title' => 'Legacy title',
+        'schema_jsonld' => ['@context' => 'https://schema.org', '@type' => 'FAQPage'],
+    ]);
+
+    $seoCurrentMeta = new ReflectionMethod(SEOFields::class, 'currentMeta');
+    $schemaCurrentMeta = new ReflectionMethod(SEOSchemaFields::class, 'currentMeta');
+    $seoCurrentMeta->setAccessible(true);
+    $schemaCurrentMeta->setAccessible(true);
+
+    expect($seoCurrentMeta->invoke(null, $target, 'en')->is($meta))->toBeTrue()
+        ->and($schemaCurrentMeta->invoke(null, $target, 'en')->is($meta))->toBeTrue();
 });

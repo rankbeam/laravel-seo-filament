@@ -13,7 +13,10 @@ Adds a complete, production-pattern SEO section to any Filament resource form:
 - **Canonical URL** field (empty = automatic canonical, query string stripped).
 - **Robots directive** select (empty = site default).
 - **Social sharing image** upload (og:image / twitter:image).
-- **Live search-snippet preview** that mirrors the resolver's fallback chain while you type.
+- **Editorial live preview** with a **Google SERP** tab and a **social card** tab — title,
+  description and URL update as you type, social-image dimensions are checked against the
+  shared thresholds (min 200×200 / ideal 1200×630), and a broken remote image degrades to a
+  placeholder instead of breaking the form. Mirrors the resolver's fallback chain.
 - **Manual-vs-fallback indicators**: a per-field panel showing the effective value and the
   resolver layer that produced it (Manual / Content fallback / Model-type default /
   Global default / Site config / Derived from URL).
@@ -28,6 +31,10 @@ relationship — no extra columns on your tables.
 | PHP | 8.2 – 8.4 |
 | Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
 | Core package | `rankbeam/laravel-seo` ^2.0 \|\| ^3.0 |
+
+Core 2 installs are supported under this constraint: when the newer
+`seoMetaForLocale()` helper is not available, the forms hydrate through the
+older `seoMeta()` relation.
 
 ## Installation
 
@@ -82,7 +89,17 @@ class PostResource extends Resource
 `static::seoSection(['title', 'description'])` limits the section to a subset of fields
 (`title`, `description`, `focus_keywords`, `canonical`, `robots`, `og_image`).
 
+The tabbed Google/social preview is shown by default. Pass `showPreview: false` to omit it
+(the source-indicators panel is unaffected):
+
+```php
+static::seoSection(showPreview: false);   // or SEOFields::make(showPreview: false)
+```
+
 Without the trait, `SEOFields::make()` returns the same section directly.
+
+> **Upgrading:** the preview view was replaced by the tabbed editor. If you published the
+> package views, refresh or remove the stale copy — see [`UPGRADING.md`](UPGRADING.md).
 
 ## Structured data (optional)
 
@@ -110,10 +127,12 @@ composer update --with "filament/filament:~5.0" && vendor/bin/pest   # Filament 
 
 The suite covers render, live counter states, create + edit save round-trips
 (including og:image upload), field clearing, URL validation, source-indicator
-attribution for every resolver layer, focus-keyword round-trips, and the
-structured-data editor (FAQ / Product build + round-trip, automatic breadcrumb,
-validation rejection, optimistic-concurrency reconciliation, and custom-schema
-preservation).
+attribution for every resolver layer, focus-keyword round-trips, the editorial
+preview (SERP + social tabs, the `showPreview` opt-out, the server-side preview
+payload — manual-vs-fallback image source, known-local dimension measurement,
+remote-image deferral, and shared-threshold warnings), and the structured-data
+editor (FAQ / Product build + round-trip, automatic breadcrumb, validation
+rejection, optimistic-concurrency reconciliation, and custom-schema preservation).
 
 ### Testbench note (provider order)
 

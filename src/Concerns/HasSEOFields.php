@@ -33,19 +33,28 @@ trait HasSEOFields
 {
     /**
      * @param  array<int, string>|null  $only  Subset of SEOFields::FIELDS to show
+     * @param  \Closure|null  $target  Closure(?Model $formRecord): ?Model — edit the SEO
+     *                                 of a RELATED model instead of the resource's own
+     *                                 record. Null binds the resource's record (default).
+     * @param  bool  $showPreview  Render the tabbed (Google SERP / social card) live
+     *                             preview. Default on; pass false to omit it.
      */
-    public static function seoSection(?array $only = null): Section
+    public static function seoSection(?array $only = null, ?\Closure $target = null, bool $showPreview = true): Section
     {
-        return SEOFields::make($only);
+        return SEOFields::make($only, $target, $showPreview);
     }
 
     /**
      * Optional structured-data (schema.org JSON-LD) editor section. Add it
      * alongside seoSection() when editors should attach FAQ / Product schema
      * or an automatic breadcrumb without writing code.
+     *
+     * @param  \Closure|null  $target  Closure(?Model $formRecord): ?Model — write schema
+     *                                 onto a RELATED model. Pass the SAME resolver you
+     *                                 passed to seoSection() so both act on one target.
      */
-    public static function seoSchemaSection(): Section
+    public static function seoSchemaSection(?\Closure $target = null): Section
     {
-        return SEOSchemaFields::make();
+        return SEOSchemaFields::make($target);
     }
 }
