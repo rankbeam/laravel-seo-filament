@@ -235,6 +235,11 @@
         <div class="seo-preview-label">Search result preview</div>
         <div class="serp-card">
             <div class="serp-breadcrumb">
+                <span class="serp-favicon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20" />
+                    </svg>
+                </span>
                 <div class="serp-url-group">
                     <span class="serp-site-name" x-text="siteName"></span>
                     <span class="serp-url" x-text="url"></span>
@@ -309,51 +314,46 @@
     }
 
     .seo-snippet-preview .seo-preview-tabs {
-        display: flex;
-        gap: 0.5rem;
+        display: inline-flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border-radius: 0.625rem;
+        width: fit-content;
+        background: color-mix(in oklch, var(--gray-500) 12%, transparent);
     }
 
     .seo-snippet-preview .seo-preview-tab {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
+        gap: 0.4rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 0.45rem;
         font-size: 0.8125rem;
         font-weight: 600;
-        border: 1px solid rgb(229 231 235);
-        background: rgb(249 250 251);
-        color: rgb(107 114 128);
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--gray-500);
         cursor: pointer;
         transition: all 0.15s ease;
     }
 
     .seo-snippet-preview .seo-preview-tab:hover {
-        border-color: rgb(209 213 219);
-        color: rgb(55 65 81);
-    }
-
-    .seo-snippet-preview .seo-preview-tab-active {
-        background: rgb(239 246 255);
-        border-color: rgb(147 197 253);
-        color: rgb(37 99 235);
-    }
-
-    .dark .seo-snippet-preview .seo-preview-tab {
-        background: rgb(31 41 55);
-        border-color: rgb(55 65 81);
-        color: rgb(156 163 175);
+        color: var(--gray-700);
     }
 
     .dark .seo-snippet-preview .seo-preview-tab:hover {
-        border-color: rgb(75 85 99);
-        color: rgb(209 213 219);
+        color: var(--gray-300);
+    }
+
+    .seo-snippet-preview .seo-preview-tab-active {
+        background: color-mix(in oklch, var(--primary-500) 16%, transparent);
+        border-color: color-mix(in oklch, var(--primary-500) 32%, transparent);
+        color: var(--primary-600);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     }
 
     .dark .seo-snippet-preview .seo-preview-tab-active {
-        background: rgb(30 58 138);
-        border-color: rgb(59 130 246);
-        color: rgb(147 197 253);
+        color: var(--primary-400);
     }
 
     .seo-snippet-preview .seo-preview-label {
@@ -371,6 +371,7 @@
         border: 1px solid rgb(229 231 235);
         background: white;
         max-width: 600px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
     }
 
     .dark .seo-snippet-preview .serp-card {
@@ -379,7 +380,29 @@
     }
 
     .seo-snippet-preview .serp-breadcrumb {
-        margin-bottom: 0.375rem;
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .seo-snippet-preview .serp-favicon {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 9999px;
+        border: 1px solid rgb(229 231 235);
+        color: rgb(107 114 128);
+        background: rgb(249 250 251);
+    }
+
+    .dark .seo-snippet-preview .serp-favicon {
+        border-color: rgb(55 65 81);
+        background: rgb(31 41 55);
+        color: rgb(156 163 175);
     }
 
     .seo-snippet-preview .serp-url-group {
@@ -450,6 +473,7 @@
         overflow: hidden;
         max-width: 500px;
         background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
     }
 
     .dark .seo-snippet-preview .social-card {
@@ -575,85 +599,67 @@
     }
 
     .seo-snippet-preview .seo-preview-badge-manual {
-        background: rgb(220 252 231);
-        color: rgb(22 101 52);
+        background: color-mix(in oklch, var(--success-500) 14%, transparent);
+        color: var(--success-600);
     }
 
     .dark .seo-snippet-preview .seo-preview-badge-manual {
-        background: rgba(20 83 45 / 0.4);
-        color: rgb(134 239 172);
+        color: var(--success-400);
     }
 
     .seo-snippet-preview .seo-preview-badge-fallback {
-        background: rgb(239 246 255);
-        color: rgb(30 64 175);
+        background: color-mix(in oklch, var(--primary-500) 12%, transparent);
+        color: var(--primary-600);
     }
 
     .dark .seo-snippet-preview .seo-preview-badge-fallback {
-        background: rgba(30 58 138 / 0.3);
-        color: rgb(191 219 254);
+        color: var(--primary-400);
     }
 
     .seo-snippet-preview .seo-preview-badge-none {
-        background: rgb(243 244 246);
-        color: rgb(107 114 128);
-    }
-
-    .dark .seo-snippet-preview .seo-preview-badge-none {
-        background: rgb(55 65 81);
-        color: rgb(156 163 175);
+        background: color-mix(in oklch, var(--gray-500) 12%, transparent);
+        color: var(--gray-500);
     }
 
     .seo-snippet-preview .seo-warnings-panel {
         display: flex;
         flex-direction: column;
         gap: 0.375rem;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid rgb(229 231 235);
-        background: rgb(249 250 251);
         max-width: 600px;
     }
 
-    .dark .seo-snippet-preview .seo-warnings-panel {
-        border-color: rgb(55 65 81);
-        background: rgb(31 41 55);
-    }
-
     .seo-snippet-preview .seo-warning-item {
-        padding: 0.375rem 0.5rem;
-        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        border-left: 3px solid currentColor;
         font-size: 0.8125rem;
         line-height: 1.4;
     }
 
     .seo-snippet-preview .seo-warning-danger {
-        background: rgb(254 242 242);
-        color: rgb(153 27 27);
+        background: color-mix(in oklch, var(--danger-500) 10%, transparent);
+        color: var(--danger-600);
     }
 
     .dark .seo-snippet-preview .seo-warning-danger {
-        background: rgba(127 29 29 / 0.3);
-        color: rgb(252 165 165);
+        color: var(--danger-400);
     }
 
     .seo-snippet-preview .seo-warning-warning {
-        background: rgb(255 251 235);
-        color: rgb(120 53 15);
+        background: color-mix(in oklch, var(--warning-500) 12%, transparent);
+        color: var(--warning-600);
     }
 
     .dark .seo-snippet-preview .seo-warning-warning {
-        background: rgba(69 26 3 / 0.3);
-        color: rgb(253 224 71);
+        color: var(--warning-400);
     }
 
     .seo-snippet-preview .seo-warning-info {
-        background: rgb(239 246 255);
-        color: rgb(30 64 175);
+        background: color-mix(in oklch, var(--primary-500) 10%, transparent);
+        color: var(--primary-600);
     }
 
     .dark .seo-snippet-preview .seo-warning-info {
-        background: rgba(30 58 138 / 0.3);
-        color: rgb(191 219 254);
+        color: var(--primary-400);
     }
 </style>

@@ -34,38 +34,36 @@
     </div>
 @endif
 
+{{--
+    Styling note: ships inside the package, so no Tailwind utilities. A scoped
+    <style> block with Filament CSS variables (oklch) + color-mix; text hierarchy
+    via opacity (inherits the panel's light/dark text colour). Badges follow the
+    panel's semantic palette, so they re-theme with the brand and in dark mode.
+--}}
 <style>
     .seo-sources-panel {
         display: flex;
         flex-direction: column;
-        gap: 0.375rem;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid rgb(229 231 235);
-        background: rgb(249 250 251);
+        gap: 0.5rem;
+        padding: 0.875rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid color-mix(in oklch, var(--gray-500) 16%, transparent);
+        background: color-mix(in oklch, var(--gray-500) 5%, transparent);
         max-width: 600px;
-    }
-
-    .dark .seo-sources-panel {
-        border-color: rgb(55 65 81);
-        background: rgb(31 41 55);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
 
     .seo-sources-header {
         font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: rgb(107 114 128);
-    }
-
-    .dark .seo-sources-header {
-        color: rgb(156 163 175);
+        letter-spacing: 0.06em;
+        opacity: 0.7;
     }
 
     .seo-sources-note {
         font-size: 0.75rem;
-        color: rgb(156 163 175);
+        opacity: 0.55;
         margin-bottom: 0.25rem;
     }
 
@@ -80,11 +78,7 @@
     .seo-source-field {
         flex: 0 0 7rem;
         font-weight: 600;
-        color: rgb(55 65 81);
-    }
-
-    .dark .seo-source-field {
-        color: rgb(209 213 219);
+        opacity: 0.85;
     }
 
     .seo-source-value {
@@ -93,11 +87,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        color: rgb(107 114 128);
-    }
-
-    .dark .seo-source-value {
-        color: rgb(156 163 175);
+        opacity: 0.55;
     }
 
     .seo-source-badge {
@@ -109,32 +99,25 @@
     }
 
     .seo-source-badge-manual {
-        background: rgb(220 252 231);
-        color: rgb(22 101 52);
+        color: var(--success-600);
+        background: color-mix(in oklch, var(--success-500) 14%, transparent);
     }
 
     .dark .seo-source-badge-manual {
-        background: rgba(20 83 45 / 0.4);
-        color: rgb(134 239 172);
+        color: var(--success-400);
     }
 
     .seo-source-badge-fallback {
-        background: rgb(239 246 255);
-        color: rgb(30 64 175);
+        color: var(--primary-600);
+        background: color-mix(in oklch, var(--primary-500) 12%, transparent);
     }
 
     .dark .seo-source-badge-fallback {
-        background: rgba(30 58 138 / 0.3);
-        color: rgb(191 219 254);
+        color: var(--primary-400);
     }
 
     .seo-source-badge-none {
-        background: rgb(243 244 246);
-        color: rgb(107 114 128);
-    }
-
-    .dark .seo-source-badge-none {
-        background: rgb(55 65 81);
-        color: rgb(156 163 175);
+        color: var(--gray-500);
+        background: color-mix(in oklch, var(--gray-500) 12%, transparent);
     }
 </style>

@@ -6,7 +6,25 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2026-06-30
+
+### Changed
+
+- **SEO editor section visual refresh** — the SERP/social preview and the
+  effective-values panel were repolished to feel native to the host panel.
+  Brand accents are now **theme-aware**: instead of a hardcoded blue, the
+  preview and indicators follow the panel's Filament **primary** color (with
+  `success`/`gray` for the supporting states) via CSS variables and
+  `color-mix`, so the section adopts the app's palette and reads correctly in
+  both light and dark mode. The SERP result card gained a **favicon and subtle
+  depth**; the Google/Social switch became a **segmented control**; and the
+  validation warnings became cleaner **left-accent pills**. Authentic Google
+  and social-network colors are intentionally still hardcoded so the previews
+  stay faithful to the real surfaces. **Visual only** — no API, payload, or
+  behavior change; published views may need a refresh (see
+  [`UPGRADING.md`](UPGRADING.md)).
+
+## [1.3.0] - 2026-06-16
 
 ### Added
 
@@ -129,5 +147,9 @@ Initial release.
 - Dual Filament support: `filament/filament ^4.0|^5.0` (Livewire 3 and 4) —
   the test suite passes unchanged on both majors.
 
-[Unreleased]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/rankbeam/laravel-seo-filament/releases/tag/v1.0.0
