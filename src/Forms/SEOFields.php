@@ -10,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\View;
@@ -86,30 +87,45 @@ class SEOFields
     {
         $only ??= self::FIELDS;
 
+        $modelResolver = fn (View $component): ?Model => self::resolveSeoTargetFromContainer($target, $component);
+
+        $fields = Group::make(array_values(Arr::only(self::fields(), $only)))
+            ->columns(2);
+
         $preview = $showPreview
-            ? [
-                View::make('seo-filament::seo-snippet-preview')
-                    ->model(fn (View $component): ?Model => self::resolveSeoTargetFromContainer($target, $component))
-                    ->viewData(fn (?Model $record): array => [
-                        'preview' => app(SEOPreviewData::class)->forModel($record),
-                        'previewHasImageField' => in_array('og_image', $only, true),
-                    ])
-                    ->columnSpanFull(),
-            ]
-            : [];
+            ? View::make('seo-filament::seo-snippet-preview')
+                ->model($modelResolver)
+                ->viewData(fn (?Model $record): array => [
+                    'preview' => app(SEOPreviewData::class)->forModel($record),
+                    'previewHasImageField' => in_array('og_image', $only, true),
+                ])
+                ->columnSpanFull()
+            : null;
+
+        // Side-by-side on wide screens: the form fields on the left, the live
+        // search / social preview alongside on the right, so the snippet
+        // updates as you type. With no preview, the fields take the full width.
+        $editor = $preview !== null
+            ? Grid::make()
+                ->columns(['default' => 1, 'lg' => 12])
+                ->schema([
+                    $fields->columnSpan(['default' => 1, 'lg' => 7]),
+                    Group::make([$preview])
+                        ->columnSpan(['default' => 1, 'lg' => 5])
+                        ->extraAttributes(['style' => 'position: sticky; top: 1.5rem; align-self: start;']),
+                ])
+                ->columnSpanFull()
+            : $fields->columnSpanFull();
 
         return Section::make('SEO')
             ->icon('heroicon-o-magnifying-glass')
+            ->description('How this page appears in search results and when shared on social.')
             ->schema([
                 Group::make([
-                    Group::make(array_values(Arr::only(self::fields(), $only)))
-                        ->columns(2)
-                        ->columnSpanFull(),
-
-                    ...$preview,
+                    $editor,
 
                     View::make('seo-filament::seo-source-indicators')
-                        ->model(fn (View $component): ?Model => self::resolveSeoTargetFromContainer($target, $component))
+                        ->model($modelResolver)
                         ->columnSpanFull(),
                 ])
                     ->statePath('seo_meta')
@@ -246,7 +262,8 @@ class SEOFields
                     'index, nofollow' => 'Index, don\'t follow links',
                     'noindex, follow' => 'Don\'t index, follow links',
                     'noindex, nofollow' => 'Don\'t index, don\'t follow links',
-                ]),
+                ])
+                ->columnSpan(2),
 
             'og_image' => FileUpload::make('og_image')
                 ->label('Social sharing image')
@@ -255,7 +272,8 @@ class SEOFields
                 ->visibility('public')
                 ->helperText('Used for og:image and twitter:image. Ideal size: '
                     .SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_WIDTH.'x'
-                    .SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_HEIGHT.' px.'),
+                    .SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_HEIGHT.' px.')
+                ->columnSpan(2),
         ];
     }
 
