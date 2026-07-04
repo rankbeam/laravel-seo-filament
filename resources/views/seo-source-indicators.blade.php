@@ -49,7 +49,6 @@
         border-radius: 0.75rem;
         border: 1px solid color-mix(in oklch, var(--gray-500) 16%, transparent);
         background: color-mix(in oklch, var(--gray-500) 5%, transparent);
-        max-width: 600px;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
 

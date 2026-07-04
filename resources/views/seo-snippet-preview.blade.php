@@ -296,6 +296,15 @@
     <div x-show="warnings.length > 0" x-cloak class="seo-warnings-panel">
         <template x-for="(warn, idx) in warnings" :key="idx">
             <div class="seo-warning-item" :class="'seo-warning-' + warn.type">
+                <svg x-show="warn.type === 'info'" class="seo-warning-icon" width="25" height="25" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm9.75-3.75a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 3a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V12a.75.75 0 0 1 .75-.75Z" />
+                </svg>
+                <svg x-show="warn.type === 'warning'" class="seo-warning-icon" width="25" height="25" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+                </svg>
+                <svg x-show="warn.type === 'danger'" class="seo-warning-icon" width="25" height="25" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 0 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z" />
+                </svg>
                 <span x-text="warn.msg"></span>
             </div>
         </template>
@@ -629,37 +638,62 @@
     }
 
     .seo-snippet-preview .seo-warning-item {
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.5rem;
-        border-left: 3px solid currentColor;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.625rem 0.875rem;
+        border-radius: 0.625rem;
+        border: 1px solid transparent;
         font-size: 0.8125rem;
-        line-height: 1.4;
+        line-height: 1.45;
+        color: var(--gray-700);
+    }
+
+    .dark .seo-snippet-preview .seo-warning-item {
+        color: var(--gray-300);
+    }
+
+    .seo-snippet-preview .seo-warning-icon {
+        flex: none;
+        margin-top: 0.0625rem;
     }
 
     .seo-snippet-preview .seo-warning-danger {
-        background: color-mix(in oklch, var(--danger-500) 10%, transparent);
+        background: color-mix(in oklch, var(--danger-500) 6%, transparent);
+        border-color: color-mix(in oklch, var(--danger-500) 18%, transparent);
+    }
+
+    .seo-snippet-preview .seo-warning-danger .seo-warning-icon {
         color: var(--danger-600);
     }
 
-    .dark .seo-snippet-preview .seo-warning-danger {
+    .dark .seo-snippet-preview .seo-warning-danger .seo-warning-icon {
         color: var(--danger-400);
     }
 
     .seo-snippet-preview .seo-warning-warning {
-        background: color-mix(in oklch, var(--warning-500) 12%, transparent);
+        background: color-mix(in oklch, var(--warning-500) 7%, transparent);
+        border-color: color-mix(in oklch, var(--warning-500) 20%, transparent);
+    }
+
+    .seo-snippet-preview .seo-warning-warning .seo-warning-icon {
         color: var(--warning-600);
     }
 
-    .dark .seo-snippet-preview .seo-warning-warning {
+    .dark .seo-snippet-preview .seo-warning-warning .seo-warning-icon {
         color: var(--warning-400);
     }
 
     .seo-snippet-preview .seo-warning-info {
-        background: color-mix(in oklch, var(--primary-500) 10%, transparent);
+        background: color-mix(in oklch, var(--gray-500) 6%, transparent);
+        border-color: color-mix(in oklch, var(--gray-500) 16%, transparent);
+    }
+
+    .seo-snippet-preview .seo-warning-info .seo-warning-icon {
         color: var(--primary-600);
     }
 
-    .dark .seo-snippet-preview .seo-warning-info {
+    .dark .seo-snippet-preview .seo-warning-info .seo-warning-icon {
         color: var(--primary-400);
     }
 </style>

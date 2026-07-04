@@ -6,6 +6,28 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-04
+
+### Added
+
+- **Side-by-side live preview.** On wide screens (`lg` and up) the SEO section
+  now lays out as a two-column grid — the form fields on the left, the live
+  SERP/social preview in a **sticky** column on the right — so the snippet
+  updates beside the fields as you type. Below `lg` it stacks as before, and
+  with the preview opted out (`showPreview: false`) the fields take the full
+  width unchanged. The section also gained a short description ("How this page
+  appears in search results and when shared on social").
+
+### Changed
+
+- **Validation warnings restyled** from left-accent pills to bordered cards with
+  a per-type SVG icon (info / warning / danger), for a clearer read that still
+  follows the panel palette via CSS variables + `color-mix` in both light and
+  dark mode. **Visual only** — no API, payload, or behavior change; published
+  views may need a refresh.
+- The effective-values (source-indicators) panel no longer caps at `600px`, so
+  it spans the editor width alongside the new two-column layout.
+
 ## [1.4.0] - 2026-06-30
 
 ### Changed
