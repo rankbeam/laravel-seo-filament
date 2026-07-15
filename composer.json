@@ -16,6 +16,13 @@
             "email": "valentinogoxhaj@gmail.com"
         }
     ],
+    "homepage": "https://rankbeam.dev",
+    "support": {
+        "issues": "https://github.com/rankbeam/laravel-seo-filament/issues",
+        "source": "https://github.com/rankbeam/laravel-seo-filament",
+        "docs": "https://docs.rankbeam.dev/guide/filament",
+        "email": "hello@rankbeam.dev"
+    },
     "require": {
         "php": "^8.2",
         "rankbeam/laravel-seo": "^2.0 || ^3.0",
