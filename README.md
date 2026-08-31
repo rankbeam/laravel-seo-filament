@@ -1,40 +1,21 @@
-# rankbeam/laravel-seo-filament
+# Rankbeam SEO for Filament
 
 [![Tests](https://github.com/rankbeam/laravel-seo-filament/actions/workflows/tests.yml/badge.svg)](https://github.com/rankbeam/laravel-seo-filament/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rankbeam/laravel-seo-filament.svg?style=flat-square)](https://packagist.org/packages/rankbeam/laravel-seo-filament)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.md)
 
-Filament form components for the [Rankbeam Laravel SEO core](https://github.com/rankbeam/laravel-seo) (`rankbeam/laravel-seo`).
+Add a complete SEO editor to any Filament 4 or 5 resource in two lines. Editors get live
+Google and social previews, focus keywords, canonical and robots controls, social-image
+validation, and clear indicators showing whether each value is manual or inherited from
+Rankbeam's fallback chain.
 
-Adds a complete, production-pattern SEO section to any Filament resource form:
+Free and MIT licensed. Values are stored through
+[`rankbeam/laravel-seo`](https://github.com/rankbeam/laravel-seo), with no extra columns
+on your resource tables.
 
-- **SEO title & description** with live character counters — thresholds (60/160) come from
-  the core `SEOWarningEvaluator`, so the admin UI and the audit layer can never disagree.
-- **Canonical URL** field (empty = automatic canonical, query string stripped).
-- **Robots directive** select (empty = site default).
-- **Social sharing image** upload (og:image / twitter:image).
-- **Editorial live preview** with a **Google SERP** tab and a **social card** tab — title,
-  description and URL update as you type, social-image dimensions are checked against the
-  shared thresholds (min 200×200 / ideal 1200×630), and a broken remote image degrades to a
-  placeholder instead of breaking the form. Mirrors the resolver's fallback chain.
-- **Manual-vs-fallback indicators**: a per-field panel showing the effective value and the
-  resolver layer that produced it (Manual / Content fallback / Model-type default /
-  Global default / Site config / Derived from URL).
-
-Values persist to the core package's `seo_meta` record via the `HasSEO` trait's
-relationship — no extra columns on your tables.
-
-## Requirements
-
-| Dependency | Version |
-|---|---|
-| PHP | 8.2 – 8.4 |
-| Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
-| Core package | `rankbeam/laravel-seo` ^2.0 \|\| ^3.0 |
-
-Core 2 installs are supported under this constraint: when the newer
-`seoMetaForLocale()` helper is not available, the forms hydrate through the
-older `seoMeta()` relation.
+[Filament guide](https://docs.rankbeam.dev/guide/filament) ·
+[Full documentation](https://docs.rankbeam.dev/) ·
+[Packagist](https://packagist.org/packages/rankbeam/laravel-seo-filament)
 
 ## Installation
 
@@ -50,8 +31,34 @@ php artisan vendor:publish --tag=seo-config
 php artisan migrate
 ```
 
-> **Contributing / local development:** the repo consumes the core via a sibling
-> path repository (`../laravel-seo`); CI checks out both repositories side by side.
+## What you get
+
+- Live Google and social previews while editors type.
+- Title, description, focus keywords, canonical, robots, and social-image fields.
+- Manual-versus-fallback source indicators for every effective value.
+- Optional schema.org fields for breadcrumbs, FAQs, and products.
+- Filament 4 and 5 support, tested in CI.
+
+## Requirements
+
+| Dependency | Version |
+|---|---|
+| PHP | 8.2 – 8.4 |
+| Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
+| Core package | `rankbeam/laravel-seo` ^2.0 \|\| ^3.0 |
+
+Core 2 installs are supported under this constraint: when the newer
+`seoMetaForLocale()` helper is not available, the forms hydrate through the
+older `seoMeta()` relation.
+
+<div class="filament-hidden">
+
+### Contributing / local development
+
+This repository consumes the core through a sibling path repository
+(`../laravel-seo`); CI checks out both repositories side by side.
+
+</div>
 
 ## Usage
 
@@ -116,7 +123,9 @@ core schema builders — a one-toggle **automatic breadcrumb**
 `SchemaValidator`; a malformed block (e.g. a Product with no offer) is rejected on save.
 Schema it can't represent (a hand-authored `@graph`, an exotic `@type`, richer Product
 fields) is preserved verbatim. See the
-[Filament fields guide](https://github.com/rankbeam/laravel-seo) for details.
+[Filament guide](https://docs.rankbeam.dev/guide/filament) for details.
+
+<div class="filament-hidden">
 
 ## Testing
 
@@ -143,6 +152,8 @@ registration pins the resolved override as the shared instance. Package discover
 this order naturally in a real app — a hand-rolled provider list might not. The symptom of
 getting it wrong is `ViewErrorBag::put(): Argument #2 ($bag) must be of type MessageBag,
 null given` on every Livewire test.
+
+</div>
 
 ## License
 
