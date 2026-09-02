@@ -1,6 +1,6 @@
 {
     "name": "rankbeam/laravel-seo-filament",
-    "description": "Filament 4/5 form components for the Rankbeam Laravel SEO core - SEO section with live character counters, search-snippet preview, and manual-vs-fallback indicators.",
+    "description": "Laravel SEO package for Filament 4 and 5 - a complete editor with Google and social previews, canonical controls, and fallback-source indicators.",
     "type": "library",
     "license": "MIT",
     "keywords": [
