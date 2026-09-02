@@ -4,10 +4,11 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rankbeam/laravel-seo-filament.svg?style=flat-square)](https://packagist.org/packages/rankbeam/laravel-seo-filament)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.md)
 
-Add a complete SEO editor to any Filament 4 or 5 resource in two lines. Editors get live
-Google and social previews, focus keywords, canonical and robots controls, social-image
-validation, and clear indicators showing whether each value is manual or inherited from
-Rankbeam's fallback chain.
+`rankbeam/laravel-seo-filament` is the free Laravel SEO package for Filament 4 and 5.
+Add its complete SEO editor to any resource in two lines. Editors get live Google and
+social previews, focus keywords, canonical and robots controls, social-image validation,
+and clear indicators showing whether each value is manual or inherited from Rankbeam's
+fallback chain.
 
 Free and MIT licensed. Values are stored through
 [`rankbeam/laravel-seo`](https://github.com/rankbeam/laravel-seo), with no extra columns
