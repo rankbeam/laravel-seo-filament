@@ -7,18 +7,18 @@
     $sources = $record && $record->exists ? app(SEOFieldSources::class)->forModel($record) : null;
 
     $fieldLabels = [
-        'title' => 'Title',
-        'description' => 'Description',
-        'og_image' => 'Social image',
-        'robots' => 'Robots',
-        'canonical' => 'Canonical URL',
+        'title' => __('seo-filament::seo-filament.indicators.title'),
+        'description' => __('seo-filament::seo-filament.indicators.description'),
+        'og_image' => __('seo-filament::seo-filament.indicators.og_image'),
+        'robots' => __('seo-filament::seo-filament.indicators.robots'),
+        'canonical' => __('seo-filament::seo-filament.indicators.canonical'),
     ];
 @endphp
 
 @if ($sources !== null)
     <div class="seo-sources-panel">
-        <div class="seo-sources-header">Effective values &amp; sources</div>
-        <div class="seo-sources-note">Shows which layer provides each value as last saved. Save the form to refresh.</div>
+        <div class="seo-sources-header">{{ __('seo-filament::seo-filament.indicators.heading') }}</div>
+        <div class="seo-sources-note">{{ __('seo-filament::seo-filament.indicators.note') }}</div>
 
         @foreach ($sources as $field => $info)
             <div class="seo-source-row">

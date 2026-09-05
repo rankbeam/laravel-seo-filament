@@ -156,6 +156,10 @@ null given` on every Livewire test.
 
 </div>
 
+## Translations
+
+The editor follows `app()->getLocale()`. Publish the strings with `php artisan vendor:publish --tag=seo-filament-lang` to override a label, or contribute a language — rules and glossary in the core repository's [TRANSLATING.md](https://github.com/rankbeam/laravel-seo/blob/master/TRANSLATING.md).
+
 ## Guides
 
 - [Laravel Filament SEO: previews, canonicals and fallback sources](https://blog.rankbeam.dev/posts/laravel-filament-seo)

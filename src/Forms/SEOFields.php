@@ -17,8 +17,10 @@ use Filament\Schemas\Components\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
+use Rankbeam\Seo\Data\SEOData;
 use Rankbeam\Seo\Filament\Support\ResolvesSeoTarget;
 use Rankbeam\Seo\Filament\Support\SEOPreviewData;
+use Rankbeam\Seo\Models\SEOMeta;
 use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
 /**
@@ -117,9 +119,9 @@ class SEOFields
                 ->columnSpanFull()
             : $fields->columnSpanFull();
 
-        return Section::make('SEO')
+        return Section::make(__('seo-filament::seo-filament.section.title'))
             ->icon('heroicon-o-magnifying-glass')
-            ->description('How this page appears in search results and when shared on social.')
+            ->description(__('seo-filament::seo-filament.section.description'))
             ->schema([
                 Group::make([
                     $editor,
@@ -223,7 +225,7 @@ class SEOFields
     {
         return [
             'title' => TextInput::make('title')
-                ->label('SEO title')
+                ->label(__('seo-filament::seo-filament.fields.title'))
                 ->prefixIcon('heroicon-o-document-text')
                 ->maxLength(255)
                 ->live(debounce: 500)
@@ -231,7 +233,7 @@ class SEOFields
                 ->columnSpan(2),
 
             'description' => Textarea::make('description')
-                ->label('SEO description')
+                ->label(__('seo-filament::seo-filament.fields.description'))
                 ->rows(3)
                 ->maxLength(500)
                 ->live(debounce: 500)
@@ -239,40 +241,40 @@ class SEOFields
                 ->columnSpan(2),
 
             'focus_keywords' => TagsInput::make('focus_keywords')
-                ->label('Focus keywords')
-                ->placeholder('Add a keyword')
-                ->helperText('The terms this page should rank for. The first keyword is treated as primary. '
-                    .'Enable seo.keywords.enabled to have the audit and the Pro scan flag pages with no keyword.')
+                ->label(__('seo-filament::seo-filament.fields.focus_keywords'))
+                ->placeholder(__('seo-filament::seo-filament.fields.focus_keywords_placeholder'))
+                ->helperText(__('seo-filament::seo-filament.fields.focus_keywords_help'))
                 ->columnSpan(2),
 
             'canonical' => TextInput::make('canonical')
-                ->label('Canonical URL')
+                ->label(__('seo-filament::seo-filament.fields.canonical'))
                 ->prefixIcon('heroicon-o-link')
                 ->url()
-                ->helperText('Leave empty for the automatic canonical URL (the page URL without query parameters).')
+                ->helperText(__('seo-filament::seo-filament.fields.canonical_help'))
                 ->columnSpan(2),
 
             'robots' => Select::make('robots')
-                ->label('Robots directive')
+                ->label(__('seo-filament::seo-filament.fields.robots'))
                 ->prefixIcon('heroicon-o-shield-check')
                 ->native(false)
-                ->placeholder('Automatic (site default)')
+                ->placeholder(__('seo-filament::seo-filament.fields.robots_placeholder'))
                 ->options([
-                    'index, follow' => 'Index, follow links',
-                    'index, nofollow' => 'Index, don\'t follow links',
-                    'noindex, follow' => 'Don\'t index, follow links',
-                    'noindex, nofollow' => 'Don\'t index, don\'t follow links',
+                    'index, follow' => __('seo-filament::seo-filament.robots_options.index_follow'),
+                    'index, nofollow' => __('seo-filament::seo-filament.robots_options.index_nofollow'),
+                    'noindex, follow' => __('seo-filament::seo-filament.robots_options.noindex_follow'),
+                    'noindex, nofollow' => __('seo-filament::seo-filament.robots_options.noindex_nofollow'),
                 ])
                 ->columnSpan(2),
 
             'og_image' => FileUpload::make('og_image')
-                ->label('Social sharing image')
+                ->label(__('seo-filament::seo-filament.fields.og_image'))
                 ->image()
                 ->directory('seo')
                 ->visibility('public')
-                ->helperText('Used for og:image and twitter:image. Ideal size: '
-                    .SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_WIDTH.'x'
-                    .SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_HEIGHT.' px.')
+                ->helperText(__('seo-filament::seo-filament.fields.og_image_help', [
+                    'width' => SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_WIDTH,
+                    'height' => SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_HEIGHT,
+                ]))
                 ->columnSpan(2),
         ];
     }
@@ -309,7 +311,7 @@ class SEOFields
      */
     protected static function counter(?string $state, int $max, array $warnings): HtmlString
     {
-        $counter = mb_strlen($state ?? '').' / '.$max.' characters';
+        $counter = __('seo-filament::seo-filament.fields.counter', ['length' => mb_strlen($state ?? ''), 'max' => $max]);
 
         foreach ($warnings as $warning) {
             if (str_ends_with($warning['key'], '_too_long')) {
@@ -354,8 +356,8 @@ class SEOFields
 
     /**
      * Turn the TagsInput's plain strings back into the stored structured shape
-     * the core reads ({@see \Rankbeam\Seo\Data\SEOData::$focusKeywords},
-     * {@see \Rankbeam\Seo\Models\SEOMeta::getPrimaryKeyword()}). The first
+     * the core reads ({@see SEOData::$focusKeywords},
+     * {@see SEOMeta::getPrimaryKeyword()}). The first
      * keyword is marked primary.
      *
      * @return array<int, array{keyword: string, is_primary: bool}>
