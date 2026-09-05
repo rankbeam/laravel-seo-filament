@@ -156,6 +156,12 @@ null given` on every Livewire test.
 
 </div>
 
+## Guides
+
+- [Laravel Filament SEO: previews, canonicals and fallback sources](https://blog.rankbeam.dev/posts/laravel-filament-seo)
+- [Laravel SEO: the complete guide](https://blog.rankbeam.dev/posts/laravel-seo-guide)
+- [Best Laravel SEO packages compared](https://blog.rankbeam.dev/posts/laravel-seo-packages-compared)
+
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md).
