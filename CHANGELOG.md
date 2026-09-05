@@ -6,6 +6,12 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-05
+
+### Added
+
+- **Nine languages for the editor:** Italian (`it`), German (`de`), French (`fr`), Spanish (`es`), Brazilian Portuguese (`pt_BR`), Dutch (`nl`), Turkish (`tr`), Russian (`ru`) and Polish (`pl`). Italian reviewed by the maintainer; the others are first passes awaiting a native review (see `TRANSLATING.md` in the core repository). Held to the parity test. Apps running in English see no change.
+
 ## [1.6.0] - 2026-09-05
 
 ### Added
