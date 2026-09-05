@@ -6,6 +6,12 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-09-05
+
+### Added
+
+- **Translatable editor (i18n foundation).** Every label, helper text, option, source badge and preview caption in the SEO section and the structured-data section now goes through Laravel translation lines in the `seo-filament` namespace (`resources/lang/en/seo-filament.php`), published with `php artisan vendor:publish --tag=seo-filament-lang`. The editor follows `app()->getLocale()`; English output is unchanged. The live counter warnings come from the core package (`seo::seo.warnings.*`, core ≥ 3.13). A parity test fails CI when a language file misses a key, carries an orphan key, an empty value or a lost placeholder. First step of the multilingual program; the locale switcher for per-locale metadata is the next one.
+
 ## [1.5.0] - 2026-07-04
 
 ### Added

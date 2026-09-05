@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Rankbeam\Seo\Filament\Support;
 
+use Illuminate\Database\Eloquent\Model;
 use Rankbeam\Seo\Data\SEOData;
 use Rankbeam\Seo\Services\SEOComputedBuilder;
 use Rankbeam\Seo\Services\SEODefaultsRepository;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * Reports which resolver layer produced each effective SEO value for a model.
@@ -54,6 +54,17 @@ class SEOFieldSources
         protected SEODefaultsRepository $defaults,
         protected SEOComputedBuilder $computed,
     ) {}
+
+    /**
+     * Human label for a source, in the app locale (falls back to LABELS).
+     */
+    public static function label(string $source): string
+    {
+        $key = 'seo-filament::seo-filament.sources.'.$source;
+        $translated = __($key);
+
+        return $translated === $key ? (self::LABELS[$source] ?? $source) : $translated;
+    }
 
     /**
      * Resolve per-field provenance for a model using the HasSEO trait.
@@ -172,7 +183,7 @@ class SEOFieldSources
             'manual' => $manualValue,
             'fallback' => $fallback,
             'source' => $source,
-            'source_label' => self::LABELS[$source],
+            'source_label' => self::label($source),
             'is_manual' => $source === self::SOURCE_MANUAL,
         ];
     }

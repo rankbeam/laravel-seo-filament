@@ -28,6 +28,7 @@
             ogImageState: null,
         @endif
 
+        sourceLabels: @js(['manual' => __('seo-filament::seo-filament.sources.manual'), 'content' => __('seo-filament::seo-filament.sources.content'), 'none' => __('seo-filament::seo-filament.sources.none')]),
         fallbackTitle: @js($preview['fallbackTitle']),
         fallbackDescription: @js($preview['fallbackDescription']),
         siteName: @js($preview['siteName']),
@@ -152,16 +153,16 @@
         },
 
         get titleSourceLabel() {
-            return this.hasManualTitle ? 'Manual' : (this.fallbackTitle ? 'Content fallback' : 'Not set');
+            return this.hasManualTitle ? this.sourceLabels.manual : (this.fallbackTitle ? this.sourceLabels.content : this.sourceLabels.none);
         },
 
         get descriptionSourceLabel() {
-            return this.hasManualDesc ? 'Manual' : (this.fallbackDescription ? 'Content fallback' : 'Not set');
+            return this.hasManualDesc ? this.sourceLabels.manual : (this.fallbackDescription ? this.sourceLabels.content : this.sourceLabels.none);
         },
 
         get imageSourceLabel() {
-            if (this.hasManualImage) return 'Manual';
-            return this.showImage ? 'Content fallback' : 'Not set';
+            if (this.hasManualImage) return this.sourceLabels.manual;
+            return this.showImage ? this.sourceLabels.content : this.sourceLabels.none;
         },
 
         get warnings() {
@@ -215,7 +216,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
             </svg>
-            Google
+            {{ __('seo-filament::seo-filament.preview.tab_google') }}
         </button>
         <button
             type="button"
@@ -226,13 +227,13 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
             </svg>
-            Social
+            {{ __('seo-filament::seo-filament.preview.tab_social') }}
         </button>
     </div>
 
     {{-- Google SERP preview --}}
     <div x-show="activeTab === 'serp'" x-cloak class="seo-serp-preview">
-        <div class="seo-preview-label">Search result preview</div>
+        <div class="seo-preview-label">{{ __('seo-filament::seo-filament.preview.serp') }}</div>
         <div class="serp-card">
             <div class="serp-breadcrumb">
                 <span class="serp-favicon">
@@ -246,13 +247,13 @@
                 </div>
             </div>
             <h3 class="serp-title" x-text="truncate(effectiveTitle, t.titleMax)"></h3>
-            <p class="serp-description" x-text="truncate(effectiveDescription, t.descMax) || 'No description available.'"></p>
+            <p class="serp-description" x-text="truncate(effectiveDescription, t.descMax) || @js(__('seo-filament::seo-filament.preview.no_description'))"></p>
         </div>
     </div>
 
     {{-- Social card preview (Facebook / X / LinkedIn) --}}
     <div x-show="activeTab === 'social'" x-cloak class="seo-social-preview">
-        <div class="seo-preview-label">Social share preview</div>
+        <div class="seo-preview-label">{{ __('seo-filament::seo-filament.preview.social') }}</div>
         <div class="social-card">
             <div class="social-image-container">
                 <template x-if="showImage">
@@ -264,30 +265,30 @@
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                     </svg>
-                    <span>No image</span>
+                    <span>{{ __('seo-filament::seo-filament.preview.no_image') }}</span>
                 </div>
             </div>
             <div class="social-body">
                 <span class="social-domain" x-text="serpDomain"></span>
                 <h3 class="social-title" x-text="socialTitle"></h3>
-                <p class="social-description" x-text="truncate(effectiveDescription, t.descMax) || 'No description available.'"></p>
+                <p class="social-description" x-text="truncate(effectiveDescription, t.descMax) || @js(__('seo-filament::seo-filament.preview.no_description'))"></p>
             </div>
         </div>
     </div>
 
     {{-- Live source labels — reflect the CURRENT form, including unsaved edits --}}
     <div class="seo-preview-sources">
-        <span class="seo-preview-sources-note">Reflecting the current form (including unsaved changes).</span>
+        <span class="seo-preview-sources-note">{{ __('seo-filament::seo-filament.preview.note') }}</span>
         <span class="seo-preview-source">
-            <span class="seo-preview-source-field">Title</span>
+            <span class="seo-preview-source-field">{{ __('seo-filament::seo-filament.preview.title') }}</span>
             <span class="seo-preview-source-badge" :class="hasManualTitle ? 'seo-preview-badge-manual' : 'seo-preview-badge-fallback'" x-text="titleSourceLabel"></span>
         </span>
         <span class="seo-preview-source">
-            <span class="seo-preview-source-field">Description</span>
+            <span class="seo-preview-source-field">{{ __('seo-filament::seo-filament.preview.description') }}</span>
             <span class="seo-preview-source-badge" :class="hasManualDesc ? 'seo-preview-badge-manual' : 'seo-preview-badge-fallback'" x-text="descriptionSourceLabel"></span>
         </span>
         <span class="seo-preview-source">
-            <span class="seo-preview-source-field">Image</span>
+            <span class="seo-preview-source-field">{{ __('seo-filament::seo-filament.preview.image') }}</span>
             <span class="seo-preview-source-badge" :class="hasManualImage ? 'seo-preview-badge-manual' : (showImage ? 'seo-preview-badge-fallback' : 'seo-preview-badge-none')" x-text="imageSourceLabel"></span>
         </span>
     </div>

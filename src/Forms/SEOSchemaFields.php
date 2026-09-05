@@ -81,9 +81,9 @@ class SEOSchemaFields
      */
     public static function make(?\Closure $target = null): Section
     {
-        return Section::make('Structured data')
+        return Section::make(__('seo-filament::seo-filament.schema.section_title'))
             ->icon('heroicon-o-code-bracket-square')
-            ->description('schema.org JSON-LD for rich results. Built from the fields below and rendered into the page — no code required.')
+            ->description(__('seo-filament::seo-filament.schema.section_description'))
             ->schema([
                 Group::make(self::fields())
                     ->statePath(self::STATE_PATH)
@@ -153,23 +153,23 @@ class SEOSchemaFields
         return [
             // The zero-config win, led with: one toggle, no fields to fill.
             Toggle::make('auto_breadcrumb')
-                ->label('Automatic breadcrumb')
-                ->helperText('Generate a BreadcrumbList from this page\'s parent chain. Zero configuration — it follows the model\'s ancestors.')
+                ->label(__('seo-filament::seo-filament.schema.auto_breadcrumb'))
+                ->helperText(__('seo-filament::seo-filament.schema.auto_breadcrumb_help'))
                 ->default(false),
 
             Repeater::make('blocks')
-                ->label('Schema blocks')
-                ->addActionLabel('Add structured data')
+                ->label(__('seo-filament::seo-filament.schema.blocks'))
+                ->addActionLabel(__('seo-filament::seo-filament.schema.add_block'))
                 ->reorderable(false)
                 ->default([])
                 ->columnSpanFull()
                 ->rules([new ValidSchemaBlocks])
                 ->schema([
                     Select::make('type')
-                        ->label('Type')
+                        ->label(__('seo-filament::seo-filament.schema.type'))
                         ->options([
-                            'faq' => 'FAQ (Q&A)',
-                            'product' => 'Product',
+                            'faq' => __('seo-filament::seo-filament.schema.type_faq'),
+                            'product' => __('seo-filament::seo-filament.schema.type_product'),
                         ])
                         ->required()
                         ->live()
@@ -177,51 +177,51 @@ class SEOSchemaFields
 
                     // FAQ
                     Repeater::make('questions')
-                        ->label('Questions')
-                        ->addActionLabel('Add question')
+                        ->label(__('seo-filament::seo-filament.schema.questions'))
+                        ->addActionLabel(__('seo-filament::seo-filament.schema.add_question'))
                         ->visible(fn (Get $get): bool => $get('type') === 'faq')
                         ->default([])
                         ->columnSpanFull()
                         ->schema([
                             TextInput::make('question')
-                                ->label('Question')
+                                ->label(__('seo-filament::seo-filament.schema.question'))
                                 ->columnSpanFull(),
                             Textarea::make('answer')
-                                ->label('Answer')
+                                ->label(__('seo-filament::seo-filament.schema.answer'))
                                 ->rows(2)
                                 ->columnSpanFull(),
                         ]),
 
                     // Product
                     TextInput::make('name')
-                        ->label('Product name')
+                        ->label(__('seo-filament::seo-filament.schema.product_name'))
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                     TextInput::make('brand')
-                        ->label('Brand')
+                        ->label(__('seo-filament::seo-filament.schema.brand'))
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                     Textarea::make('description')
-                        ->label('Description')
+                        ->label(__('seo-filament::seo-filament.schema.description'))
                         ->rows(2)
                         ->columnSpanFull()
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                     TextInput::make('image')
-                        ->label('Image URL')
+                        ->label(__('seo-filament::seo-filament.schema.image_url'))
                         ->url()
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                     TextInput::make('sku')
-                        ->label('SKU')
+                        ->label(__('seo-filament::seo-filament.schema.sku'))
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                     TextInput::make('price')
-                        ->label('Price')
+                        ->label(__('seo-filament::seo-filament.schema.price'))
                         ->numeric()
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                     TextInput::make('currency')
-                        ->label('Currency')
+                        ->label(__('seo-filament::seo-filament.schema.currency'))
                         ->default('USD')
                         ->maxLength(3)
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                     Select::make('availability')
-                        ->label('Availability')
+                        ->label(__('seo-filament::seo-filament.schema.availability'))
                         ->options(array_combine(self::AVAILABILITY, self::AVAILABILITY))
                         ->visible(fn (Get $get): bool => $get('type') === 'product'),
                 ]),
