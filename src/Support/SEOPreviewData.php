@@ -6,6 +6,7 @@ namespace Rankbeam\Seo\Filament\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Rankbeam\Seo\I18n\LengthPolicy;
 use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
 /**
@@ -68,7 +69,7 @@ class SEOPreviewData
             'fallbackTitle' => '',
             'fallbackDescription' => '',
             'image' => $this->emptyImage(),
-            'thresholds' => $this->thresholds(),
+            'thresholds' => $this->thresholds(null, null, $locale),
         ];
 
         if (! $model instanceof Model || ! $model->exists || ! method_exists($model, 'seoMeta')) {
@@ -81,25 +82,53 @@ class SEOPreviewData
         $base['fallbackDescription'] = (string) ($sources['description']['fallback'] ?? '');
         $base['image'] = $this->resolveImage($sources['og_image'] ?? []);
 
+        // The budgets follow the script of the value the page will render
+        // (the saved manual value, else the fallback) — a Japanese title gets
+        // the ~30-character budget, not the Latin 60.
+        $base['thresholds'] = $this->thresholds(
+            $this->effectiveText($sources['title'] ?? [], $base['fallbackTitle']),
+            $this->effectiveText($sources['description'] ?? [], $base['fallbackDescription']),
+            $locale,
+        );
+
         return $base;
     }
 
     /**
-     * The shared editorial thresholds, sourced from the core evaluator so the
-     * preview, the `seo:audit`, and the Pro scan all agree.
+     * The shared editorial thresholds: the image sizes from the core evaluator
+     * and the title / description budgets from the core {@see LengthPolicy}
+     * for the given values' script (the Latin 60 / 160 when they are empty and
+     * the locale is Latin), so the preview, the counters, `seo:audit` and the
+     * Pro scan all agree.
      *
+     * @param  string|null  $title  The effective title, for its script
+     * @param  string|null  $description  The effective description, for its script
+     * @param  string|null  $locale  The page locale — the script hint for an empty value
      * @return array{titleMax: int, descMax: int, minWidth: int, minHeight: int, idealWidth: int, idealHeight: int}
      */
-    public function thresholds(): array
+    public function thresholds(?string $title = null, ?string $description = null, ?string $locale = null): array
     {
         return [
-            'titleMax' => SEOWarningEvaluator::TITLE_MAX_LENGTH,
-            'descMax' => SEOWarningEvaluator::DESCRIPTION_MAX_LENGTH,
+            'titleMax' => LengthPolicy::for($title, $locale)->titleMax,
+            'descMax' => LengthPolicy::for($description, $locale)->descriptionMax,
             'minWidth' => SEOWarningEvaluator::MIN_SOCIAL_IMAGE_WIDTH,
             'minHeight' => SEOWarningEvaluator::MIN_SOCIAL_IMAGE_HEIGHT,
             'idealWidth' => SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_WIDTH,
             'idealHeight' => SEOWarningEvaluator::IDEAL_SOCIAL_IMAGE_HEIGHT,
         ];
+    }
+
+    /**
+     * The value the page will render for a field: the saved manual value when
+     * there is one, else the fallback the resolver would use.
+     *
+     * @param  array<string, mixed>  $source  One entry of {@see SEOFieldSources::forModel()}
+     */
+    protected function effectiveText(array $source, string $fallback): string
+    {
+        $effective = $source['effective'] ?? $source['manual'] ?? null;
+
+        return is_string($effective) && $effective !== '' ? $effective : $fallback;
     }
 
     /**

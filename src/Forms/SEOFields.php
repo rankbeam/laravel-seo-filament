@@ -20,6 +20,7 @@ use Illuminate\Support\HtmlString;
 use Rankbeam\Seo\Data\SEOData;
 use Rankbeam\Seo\Filament\Support\ResolvesSeoTarget;
 use Rankbeam\Seo\Filament\Support\SEOPreviewData;
+use Rankbeam\Seo\I18n\LengthPolicy;
 use Rankbeam\Seo\Models\SEOMeta;
 use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
@@ -279,12 +280,22 @@ class SEOFields
         ];
     }
 
+    /**
+     * The live "n / max characters" counter under the title field. The budget
+     * comes from the core {@see LengthPolicy} for the script of the value
+     * being typed (60 for Latin, ~30 for CJK) with the app locale as the hint
+     * for an empty field, and the count is in graphemes — the same numbers
+     * the audit and the Pro scan report.
+     */
     protected static function titleCounter(?string $state): HtmlString
     {
+        $locale = app()->getLocale();
+        $policy = LengthPolicy::for($state, $locale);
+
         return self::counter(
-            $state,
-            SEOWarningEvaluator::TITLE_MAX_LENGTH,
-            app(SEOWarningEvaluator::class)->evaluateTitle($state, $state),
+            $policy->length($state),
+            $policy->titleMax,
+            app(SEOWarningEvaluator::class)->evaluateTitle($state, $state, $locale),
         );
     }
 
@@ -297,21 +308,26 @@ class SEOFields
 
     protected static function descriptionCounter(?string $state): HtmlString
     {
+        $locale = app()->getLocale();
+        $policy = LengthPolicy::for($state, $locale);
+
         return self::counter(
-            $state,
-            SEOWarningEvaluator::DESCRIPTION_MAX_LENGTH,
-            app(SEOWarningEvaluator::class)->evaluateDescription($state, $state),
+            $policy->length($state),
+            $policy->descriptionMax,
+            app(SEOWarningEvaluator::class)->evaluateDescription($state, $state, $locale),
         );
     }
 
     /**
      * Render "n / max characters" with the core evaluator's verdict attached.
      *
+     * @param  int  $length  The value's length in graphemes
+     * @param  int  $max  The script-aware budget
      * @param  array<int, array{level: string, key: string, message: string}>  $warnings
      */
-    protected static function counter(?string $state, int $max, array $warnings): HtmlString
+    protected static function counter(int $length, int $max, array $warnings): HtmlString
     {
-        $counter = __('seo-filament::seo-filament.fields.counter', ['length' => mb_strlen($state ?? ''), 'max' => $max]);
+        $counter = __('seo-filament::seo-filament.fields.counter', ['length' => $length, 'max' => $max]);
 
         foreach ($warnings as $warning) {
             if (str_ends_with($warning['key'], '_too_long')) {

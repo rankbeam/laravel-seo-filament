@@ -6,6 +6,13 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-09-06
+
+### Changed
+
+- **Script-aware character counters and preview budgets.** The live "n / max characters" counters under the title and description fields, and the SERP / social preview's truncation and warnings, now take their budget from the core `Rankbeam\Seo\I18n\LengthPolicy` (core 3.15): 60 / 160 for Latin text as before, ~30 / ~80 for Chinese, Japanese and Korean, per `config('seo.length_policy')`; the app locale is the hint for an empty field. Lengths are counted in graphemes, so a Thai syllable or an emoji counts as one. The same numbers `seo:audit` and the Pro scan report, so the editor can never contradict them. Requires `rankbeam/laravel-seo` **^3.15**.
+- The canonical field accepts internationalised URLs (an IDN host, a Unicode path) — it already did through Laravel's `url` rule; now pinned by a test, matching the core audit's Unicode-aware `invalid_canonical` check.
+
 ## [1.7.0] - 2026-09-05
 
 ### Added
