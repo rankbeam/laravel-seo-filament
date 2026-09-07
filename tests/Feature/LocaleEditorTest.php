@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Rankbeam\Seo\Filament\Support\SeoLocales;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Models\Post;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostLocalesResource\Pages\CreatePostLocales;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostLocalesResource\Pages\EditPostLocales;
+use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostLocalesResource\Pages\EditPostLocalesOnTranslatablePage;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource\Pages\EditPost;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\TranslatablePostResource\Pages\EditTranslatablePost;
 use Rankbeam\Seo\Models\SEOMeta;
@@ -119,6 +122,25 @@ it('round-trips focus keywords per locale in the stored structured shape', funct
             'seo_meta.en.focus_keywords' => ['laravel seo', 'meta tags'],
             'seo_meta.it.focus_keywords' => ['seo laravel'],
         ]);
+});
+
+it('stores an uploaded social image on the tab locale row only', function () {
+    Storage::fake('public');
+    $post = Post::query()->create(['title' => 'Hello', 'slug' => 'hello']);
+
+    Livewire::test(EditPostLocales::class, ['record' => $post->getRouteKey()])
+        ->fillForm(['seo_meta.it.og_image' => UploadedFile::fake()->image('og-it.jpg', 1200, 630)])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $post = $post->fresh();
+    $italian = $post->seoMetaForLocale('it')->first();
+
+    expect($italian->og_image)->toBeString()->toStartWith('seo/')
+        ->and($post->seoMetaForLocale('en')->first()->og_image)->toBeNull()
+        ->and($post->seoMetaForLocale('ja')->first())->toBeNull();
+
+    Storage::disk('public')->assertExists($italian->og_image);
 });
 
 it('validates every tab, not only the visible one', function () {
@@ -318,9 +340,19 @@ it('lets an explicit locale list override the page locale', function () {
         ->assertDontSeeHtml('seo_meta.de.title')
         ->assertSeeHtml('seo_meta.title');
 
-    Livewire::test(EditPostLocales::class, ['record' => $post->getRouteKey()])
+    // Same page contract (active locale `fr`), section given an explicit list:
+    // tabs for the list, no follow mode, no tab for the page's `fr`.
+    Livewire::test(EditPostLocalesOnTranslatablePage::class, ['record' => $post->getRouteKey()])
         ->assertOk()
-        ->assertSeeHtml('seo_meta.ja.title');
+        ->assertSeeHtml('seo_meta.en.title')
+        ->assertSeeHtml('seo_meta.ja.title')
+        ->assertDontSeeHtml('seo_meta.fr.title')
+        ->fillForm(['seo_meta.it.title' => 'Titolo'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($post->fresh()->seoMetaForLocale('it')->first()->title)->toBe('Titolo')
+        ->and($post->fresh()->seoMetaForLocale('fr')->first())->toBeNull();
 });
 
 /*

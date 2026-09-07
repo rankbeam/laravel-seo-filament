@@ -39,6 +39,7 @@ class PostLocalesResource extends Resource
             'index' => PostLocalesResource\Pages\ListPostLocales::route('/'),
             'create' => PostLocalesResource\Pages\CreatePostLocales::route('/create'),
             'edit' => PostLocalesResource\Pages\EditPostLocales::route('/{record}/edit'),
+            'edit-translatable' => PostLocalesResource\Pages\EditPostLocalesOnTranslatablePage::route('/{record}/edit-translatable'),
         ];
     }
 }
