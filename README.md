@@ -185,7 +185,7 @@ null given` on every Livewire test.
 
 ## Translations
 
-The editor's labels follow `app()->getLocale()` (the *content* locales it edits are a separate matter — see [Several languages](#several-languages)). Publish the strings with `php artisan vendor:publish --tag=seo-filament-lang` to override a label, or contribute a language — rules and glossary in the core repository's [TRANSLATING.md](https://github.com/rankbeam/laravel-seo/blob/master/TRANSLATING.md).
+The editor's labels follow `app()->getLocale()` (the *content* locales it edits are a separate matter — see [Several languages](#several-languages)). Publish the strings with `php artisan vendor:publish --tag=seo-filament-lang` to override a label, or contribute a language — rules and glossary in the core repository's [TRANSLATING.md](https://github.com/rankbeam/laravel-seo/blob/master/TRANSLATING.md). Seventeen languages ship: English, Italian, German, French, Spanish, Brazilian Portuguese, Dutch, Turkish, Russian, Polish and, since 1.10, Japanese, Simplified and Traditional Chinese (`zh_CN`, `zh_TW`), Korean, Greek, Ukrainian and Czech.
 
 ## Guides
 

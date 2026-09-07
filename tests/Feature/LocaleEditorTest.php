@@ -369,6 +369,10 @@ it('labels a locale with its language name when intl is available, else its code
     expect(SeoLocales::label('it', 'en'))->toBe('Italian')
         ->and(SeoLocales::label('it', 'it'))->toBe('italiano')
         ->and(SeoLocales::label('pt_BR', 'en'))->toBe('Portuguese (Brazil)')
+        ->and(SeoLocales::label('zh_TW', 'en'))->toBe('Chinese (Taiwan)')
+        ->and(SeoLocales::label('zh_CN', 'zh_CN'))->toBe('中文（中国）')
+        ->and(SeoLocales::label('ja', 'ja'))->toBe('日本語')
+        ->and(SeoLocales::label('uk', 'uk'))->toBe('українська')
         // A code intl cannot name still yields a non-blank label (intl spells
         // the parts, "xx (YY)"; without intl it is the BCP 47 code).
         ->and(SeoLocales::label('xx_YY', 'en'))->toContain('xx');
