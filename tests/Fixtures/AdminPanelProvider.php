@@ -9,7 +9,9 @@ use Filament\PanelProvider;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\ArticleResource;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\BrokenArticleResource;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostNoPreviewResource;
+use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostLocalesResource;
 use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\PostResource;
+use Rankbeam\Seo\Filament\Tests\Fixtures\Resources\TranslatablePostResource;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -24,6 +26,8 @@ class AdminPanelProvider extends PanelProvider
                 PostNoPreviewResource::class,
                 ArticleResource::class,
                 BrokenArticleResource::class,
+                PostLocalesResource::class,
+                TranslatablePostResource::class,
             ]);
     }
 }

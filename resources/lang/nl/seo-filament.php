@@ -97,4 +97,10 @@ return [
         'currency' => 'Valuta',
         'availability' => 'Beschikbaarheid',
     ],
+
+    // The per-language tabs of the SEO section (several locales).
+    'locales' => [
+        'heading' => 'Talen',
+        'badge_tooltip' => ':count van :total velden ingevuld voor :language',
+    ],
 ];

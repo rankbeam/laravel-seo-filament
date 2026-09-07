@@ -38,10 +38,15 @@ trait HasSEOFields
      *                                 record. Null binds the resource's record (default).
      * @param  bool  $showPreview  Render the tabbed (Google SERP / social card) live
      *                             preview. Default on; pass false to omit it.
+     * @param  array<int, string>|null  $locales  The locales to edit, one tab each
+     *                                            (`['en', 'it', 'ja']`). Null = the page's
+     *                                            active locale (translatable plugin), else
+     *                                            `config('seo-filament.locales')`, else the
+     *                                            app locale alone.
      */
-    public static function seoSection(?array $only = null, ?\Closure $target = null, bool $showPreview = true): Section
+    public static function seoSection(?array $only = null, ?\Closure $target = null, bool $showPreview = true, ?array $locales = null): Section
     {
-        return SEOFields::make($only, $target, $showPreview);
+        return SEOFields::make($only, $target, $showPreview, $locales);
     }
 
     /**

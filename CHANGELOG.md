@@ -6,6 +6,18 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-09-07
+
+### Added
+
+- **One tab per language.** The core keeps one `seo_meta` row per (model, locale); until now the section could only reach the app locale's row. Pass the locales a page is published in — `static::seoSection(locales: ['en', 'it', 'ja'])`, `SEOFields::make(locales: [...])`, or once for every resource in the new `config/seo-filament.php` (`php artisan vendor:publish --tag=seo-filament-config`) — and the section renders one tab per language, labelled with the language's name in the panel's language (ext-intl; the code without it) and badged with the number of fields set in that version. Each tab edits its own row with its own live counters (the core `LengthPolicy` for that language's script: an empty Japanese title shows `0 / 30` next to an English `0 / 60` on the same page), its own SERP / social preview and its own fallback indicators. All tabs are validated and saved together; a language nothing was entered for never gets a placeholder row. Form state is `seo_meta.{locale}.title` with several locales and stays `seo_meta.title` with one, so existing tests and the Pro field actions are unaffected.
+- **Follows a translatable plugin's locale.** When the page exposes an active schema locale (Filament's `getActiveSchemaLocale()`, which the spatie translatable plugins' page concern implements) and the section was given no locale list, it edits that locale's row and re-hydrates on every switch of the page's header locale switcher, with no tabs of its own — the structured-data section follows the same locale. Duck-typed on Filament's method, no plugin dependency.
+- `Rankbeam\Seo\Filament\Support\SeoLocales` — the locale resolution (explicit → page → config → app locale) and the language labels, reusable by add-ons.
+
+### Fixed
+
+- The source indicators for a non-app locale described the **app locale's** manual values (the manual layer ignored the locale it was asked for). They now read the requested locale's row.
+
 ## [1.8.0] - 2026-09-06
 
 ### Changed
@@ -188,7 +200,8 @@ Initial release.
 - Dual Filament support: `filament/filament ^4.0|^5.0` (Livewire 3 and 4) —
   the test suite passes unchanged on both majors.
 
-[Unreleased]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.8.0...v1.9.0
 [1.4.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/rankbeam/laravel-seo-filament/compare/v1.1.0...v1.2.0

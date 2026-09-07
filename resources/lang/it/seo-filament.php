@@ -97,4 +97,10 @@ return [
         'currency' => 'Valuta',
         'availability' => 'Disponibilità',
     ],
+
+    // The per-language tabs of the SEO section (several locales).
+    'locales' => [
+        'heading' => 'Lingue',
+        'badge_tooltip' => ':count campi su :total compilati per :language',
+    ],
 ];

@@ -97,4 +97,10 @@ return [
         'currency' => 'Waluta',
         'availability' => 'Dostępność',
     ],
+
+    // The per-language tabs of the SEO section (several locales).
+    'locales' => [
+        'heading' => 'Języki',
+        'badge_tooltip' => 'Wypełniono :count z :total pól dla :language',
+    ],
 ];

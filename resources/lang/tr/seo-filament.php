@@ -97,4 +97,10 @@ return [
         'currency' => 'Para birimi',
         'availability' => 'Stok durumu',
     ],
+
+    // The per-language tabs of the SEO section (several locales).
+    'locales' => [
+        'heading' => 'Diller',
+        'badge_tooltip' => ':language için :total alandan :count tanesi dolduruldu',
+    ],
 ];

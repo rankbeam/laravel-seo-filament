@@ -75,7 +75,10 @@ class SEOFieldSources
     {
         $locale ??= app()->getLocale();
 
-        $manual = method_exists($model, 'seoMeta') ? SEOData::fromModel($model) : new SEOData;
+        // The manual layer is THIS locale's seo_meta row — not the app
+        // locale's — so the indicators for an Italian tab describe the
+        // Italian row.
+        $manual = method_exists($model, 'seoMeta') ? SEOData::fromModel($model, $locale) : new SEOData;
         $computed = $this->computed->fromModel($model, $locale);
         $modelDefaults = $this->defaults->forModelType($model, $locale);
         $globalDefaults = $this->defaults->global($locale);
