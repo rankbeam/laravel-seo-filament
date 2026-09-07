@@ -8,6 +8,11 @@ use Illuminate\Support\ServiceProvider;
 
 class SeoFilamentServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/seo-filament.php', 'seo-filament');
+    }
+
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'seo-filament');
@@ -21,6 +26,10 @@ class SeoFilamentServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../resources/lang' => $this->app->langPath('vendor/seo-filament'),
             ], 'seo-filament-lang');
+
+            $this->publishes([
+                __DIR__.'/../config/seo-filament.php' => config_path('seo-filament.php'),
+            ], 'seo-filament-config');
         }
     }
 }

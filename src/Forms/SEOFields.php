@@ -10,15 +10,20 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
 use Rankbeam\Seo\Data\SEOData;
 use Rankbeam\Seo\Filament\Support\ResolvesSeoTarget;
+use Rankbeam\Seo\Filament\Support\SeoLocales;
 use Rankbeam\Seo\Filament\Support\SEOPreviewData;
 use Rankbeam\Seo\I18n\LengthPolicy;
 use Rankbeam\Seo\Models\SEOMeta;
@@ -47,6 +52,26 @@ use Rankbeam\Seo\Services\SEOWarningEvaluator;
  * ```
  *
  * The model behind the form must use the core HasSEO trait.
+ *
+ * ## Several languages
+ *
+ * The core keeps one `seo_meta` row per (model, locale). Pass the locales a
+ * page is published in and the section renders one tab per language, each
+ * editing its own row with its own counters (the core LengthPolicy for that
+ * language's script), its own preview and its own fallback indicators:
+ *
+ * ```php
+ * SEOFields::make(locales: ['en', 'it', 'ja'])
+ * // or once for every resource: config('seo-filament.locales')
+ * ```
+ *
+ * When the page runs a translatable plugin (Filament's
+ * `getActiveSchemaLocale()` returns the locale its header switcher selected)
+ * the section follows that locale instead of showing tabs of its own. With
+ * neither, it edits the app locale's row exactly as before.
+ *
+ * Form state: `seo_meta.title` with one locale (unchanged since 1.0), and
+ * `seo_meta.{locale}.title` with several.
  */
 class SEOFields
 {
@@ -63,7 +88,8 @@ class SEOFields
      * add-on packages - e.g. the Pro AI suggestion actions attach
      * themselves to 'title' and 'description' through it. The closure
      * receives the built Field and returns it (returning null keeps the
-     * field as passed in).
+     * field as passed in). With several locales the modifier runs once per
+     * locale tab, on that tab's field.
      */
     public static function modifyFieldUsing(string $field, \Closure $modifier): void
     {
@@ -85,21 +111,107 @@ class SEOFields
      *                                 record. Null binds the form's record (default).
      * @param  bool  $showPreview  Render the tabbed (Google SERP / social card) live
      *                             preview. Default on; pass false to omit it.
+     * @param  array<int, string>|null  $locales  The locales to edit, one tab each
+     *                                            (`['en', 'it', 'ja']`). Null = the
+     *                                            page's active locale when a translatable
+     *                                            plugin provides one, else
+     *                                            `config('seo-filament.locales')`, else
+     *                                            the app locale alone.
      */
-    public static function make(?array $only = null, ?\Closure $target = null, bool $showPreview = true): Section
+    public static function make(?array $only = null, ?\Closure $target = null, bool $showPreview = true, ?array $locales = null): Section
     {
         $only ??= self::FIELDS;
 
         $modelResolver = fn (View $component): ?Model => self::resolveSeoTargetFromContainer($target, $component);
 
-        $fields = Group::make(array_values(Arr::only(self::fields(), $only)))
+        return Section::make(__('seo-filament::seo-filament.section.title'))
+            ->icon('heroicon-o-magnifying-glass')
+            ->description(__('seo-filament::seo-filament.section.description'))
+            ->schema([
+                Group::make()
+                    ->statePath('seo_meta')
+                    ->dehydrated(false)
+                    ->columnSpanFull()
+                    // The locale set is decided when the schema is built, not
+                    // when make() runs: a translatable plugin's active locale
+                    // lives on the Livewire page, which a component only knows
+                    // once it is mounted in a form.
+                    ->schema(function (Group $component) use ($only, $showPreview, $locales, $modelResolver): array {
+                        [$list] = SeoLocales::resolve($locales, $component);
+
+                        if (count($list) === 1) {
+                            return self::localeEditor($only, $showPreview, $modelResolver, $list[0]);
+                        }
+
+                        return [self::localeTabs($list, $only, $showPreview, $modelResolver)];
+                    })
+                    ->afterStateHydrated(function (Group $component, ?Model $record) use ($only, $target, $locales): void {
+                        $target = self::resolveSeoTarget($target, $record, $component);
+                        [$list] = SeoLocales::resolve($locales, $component);
+
+                        $state = [];
+
+                        foreach ($list as $locale) {
+                            $meta = $target instanceof Model ? self::currentMeta($target, $locale) : null;
+                            $row = self::rowToState($meta, $only);
+
+                            if (count($list) === 1) {
+                                $state = $row;
+                            } else {
+                                $state[$locale] = $row;
+                            }
+                        }
+
+                        $component->getChildSchema()->fill($state);
+                    })
+                    ->saveRelationshipsUsing(function (Group $component, ?Model $record) use ($only, $target, $locales): void {
+                        $target = self::resolveSeoTarget($target, $record, $component);
+
+                        // Null target (create form / not-yet-existing relation)
+                        // or a model without the HasSEO contract: nothing to
+                        // write, and we never auto-create a placeholder.
+                        if (! $target instanceof Model || ! method_exists($target, 'seoMeta')) {
+                            return;
+                        }
+
+                        // getState() (not the raw state) runs the dehydration
+                        // hooks, which is what persists a freshly uploaded
+                        // og_image file and turns it into a storable path.
+                        $state = $component->getChildSchema()->getState();
+                        [$list] = SeoLocales::resolve($locales, $component);
+
+                        foreach ($list as $locale) {
+                            $row = count($list) === 1 ? $state : ($state[$locale] ?? []);
+
+                            self::persistRow($target, $locale, self::stateToRow(is_array($row) ? $row : [], $only));
+                        }
+
+                        $target->unsetRelation('seoMeta');
+                    }),
+            ])
+            ->collapsible()
+            ->columnSpanFull();
+    }
+
+    /**
+     * One language's editor: the fields (with counters for that language's
+     * script), the live preview and the source indicators, all resolved for
+     * `$locale`. Returned as a list so it can be the Group's own schema (one
+     * locale, state `seo_meta.*`) or a Tab's (state `seo_meta.{locale}.*`).
+     *
+     * @param  array<int, string>  $only
+     * @return array<int, Component>
+     */
+    protected static function localeEditor(array $only, bool $showPreview, \Closure $modelResolver, string $locale): array
+    {
+        $fields = Group::make(array_values(Arr::only(self::fields($locale), $only)))
             ->columns(2);
 
         $preview = $showPreview
             ? View::make('seo-filament::seo-snippet-preview')
                 ->model($modelResolver)
                 ->viewData(fn (?Model $record): array => [
-                    'preview' => app(SEOPreviewData::class)->forModel($record),
+                    'preview' => app(SEOPreviewData::class)->forModel($record, $locale),
                     'previewHasImageField' => in_array('og_image', $only, true),
                 ])
                 ->columnSpanFull()
@@ -120,91 +232,162 @@ class SEOFields
                 ->columnSpanFull()
             : $fields->columnSpanFull();
 
-        return Section::make(__('seo-filament::seo-filament.section.title'))
-            ->icon('heroicon-o-magnifying-glass')
-            ->description(__('seo-filament::seo-filament.section.description'))
-            ->schema([
-                Group::make([
-                    $editor,
+        return [
+            $editor,
 
-                    View::make('seo-filament::seo-source-indicators')
-                        ->model($modelResolver)
-                        ->columnSpanFull(),
-                ])
-                    ->statePath('seo_meta')
-                    ->dehydrated(false)
-                    ->columnSpanFull()
-                    ->afterStateHydrated(function (Group $component, ?Model $record) use ($only, $target): void {
-                        $target = self::resolveSeoTarget($target, $record, $component);
+            View::make('seo-filament::seo-source-indicators')
+                ->model($modelResolver)
+                ->viewData(['locale' => $locale])
+                ->columnSpanFull(),
+        ];
+    }
 
-                        $meta = $target instanceof Model ? self::currentMeta($target, app()->getLocale()) : null;
+    /**
+     * One tab per locale, each a full {@see localeEditor()} bound to
+     * `seo_meta.{locale}`. Tabs, not a select-and-hide switcher, so every
+     * language's fields stay in the form state, are validated on save and
+     * are persisted together — a hidden field would drop out of all three.
+     *
+     * The tab label is the language's name in the panel's language (ext-intl
+     * when loaded, the code otherwise); the badge counts the fields set in
+     * that language right now, so an editor sees at a glance which versions
+     * are still empty.
+     *
+     * @param  array<int, string>  $locales
+     * @param  array<int, string>  $only
+     */
+    protected static function localeTabs(array $locales, array $only, bool $showPreview, \Closure $modelResolver): Tabs
+    {
+        $tabs = [];
 
-                        $state = $meta?->only($only) ?: [];
+        foreach ($locales as $locale) {
+            $tabs[] = Tab::make(SeoLocales::label($locale))
+                ->statePath($locale)
+                ->badge(function (Get $get) use ($only, $locale): ?string {
+                    $filled = self::filledCount($get, $only, $locale);
 
-                        // focus_keywords are stored as [{keyword, is_primary}]
-                        // objects but edited as plain strings in the TagsInput.
-                        if (array_key_exists('focus_keywords', $state)) {
-                            $state['focus_keywords'] = self::keywordsToStrings($state['focus_keywords']);
-                        }
+                    return $filled > 0 ? (string) $filled : null;
+                })
+                ->badgeColor('success')
+                ->badgeTooltip(function (Get $get) use ($only, $locale): string {
+                    return __('seo-filament::seo-filament.locales.badge_tooltip', [
+                        'count' => self::filledCount($get, $only, $locale),
+                        'total' => count($only),
+                        'language' => SeoLocales::label($locale),
+                    ]);
+                })
+                ->schema(self::localeEditor($only, $showPreview, $modelResolver, $locale));
+        }
 
-                        $component->getChildSchema()->fill($state);
-                    })
-                    ->saveRelationshipsUsing(function (Group $component, ?Model $record) use ($only, $target): void {
-                        $target = self::resolveSeoTarget($target, $record, $component);
+        // Open on the panel's language when it is one of the tabs.
+        $active = array_search(app()->getLocale(), $locales, true);
 
-                        // Null target (create form / not-yet-existing relation)
-                        // or a model without the HasSEO contract: nothing to
-                        // write, and we never auto-create a placeholder.
-                        if (! $target instanceof Model || ! method_exists($target, 'seoMeta')) {
-                            return;
-                        }
-
-                        // getState() (not the raw state) runs the dehydration
-                        // hooks, which is what persists a freshly uploaded
-                        // og_image file and turns it into a storable path.
-                        $state = collect($component->getChildSchema()->getState())
-                            ->only($only)
-                            ->map(function (mixed $value, string $key): mixed {
-                                // focus_keywords is legitimately an array of
-                                // strings — turn it back into the stored
-                                // [{keyword, is_primary}] shape, not the first
-                                // element (that collapse is for file uploads).
-                                if ($key === 'focus_keywords') {
-                                    $keywords = self::stringsToKeywords($value);
-
-                                    return $keywords === [] ? null : $keywords;
-                                }
-
-                                if (is_array($value)) {
-                                    $value = Arr::first($value);
-                                }
-
-                                return ($value === '' || $value === null) ? null : $value;
-                            })
-                            ->all();
-
-                        $locale = app()->getLocale();
-                        $existing = self::currentMeta($target, $locale);
-
-                        if ($existing) {
-                            $existing->update($state);
-                        } elseif (array_filter($state) !== []) {
-                            $target->seoMeta()->create($state + ['locale' => $locale]);
-                        }
-
-                        $target->unsetRelation('seoMeta');
-                    }),
-            ])
-            ->collapsible()
+        return Tabs::make(__('seo-filament::seo-filament.locales.heading'))
+            ->tabs($tabs)
+            ->activeTab($active === false ? 1 : $active + 1)
+            ->contained(false)
             ->columnSpanFull();
+    }
+
+    /**
+     * How many of the editable fields carry a value in the current form state
+     * of one locale. A `Get` resolves paths relative to the component's
+     * CONTAINER (the `seo_meta` group), not to the tab's own statePath, so
+     * the locale is spelled out.
+     *
+     * @param  array<int, string>  $only
+     */
+    protected static function filledCount(Get $get, array $only, string $locale): int
+    {
+        $filled = 0;
+
+        foreach ($only as $field) {
+            $value = $get($locale.'.'.$field);
+
+            if (is_array($value) ? array_filter($value) !== [] : ($value !== null && $value !== '')) {
+                $filled++;
+            }
+        }
+
+        return $filled;
+    }
+
+    /**
+     * A stored row as form state: only the shown fields, focus keywords
+     * flattened from the stored [{keyword, is_primary}] objects into the plain
+     * strings the TagsInput edits.
+     *
+     * @param  array<int, string>  $only
+     * @return array<string, mixed>
+     */
+    protected static function rowToState(?Model $meta, array $only): array
+    {
+        $state = $meta?->only($only) ?: [];
+
+        if (array_key_exists('focus_keywords', $state)) {
+            $state['focus_keywords'] = self::keywordsToStrings($state['focus_keywords']);
+        }
+
+        return $state;
+    }
+
+    /**
+     * Form state as a storable row: empty strings become null, a single-file
+     * upload collapses to its path, focus keywords go back to the structured
+     * shape the core reads.
+     *
+     * @param  array<string, mixed>  $state
+     * @param  array<int, string>  $only
+     * @return array<string, mixed>
+     */
+    protected static function stateToRow(array $state, array $only): array
+    {
+        return collect($state)
+            ->only($only)
+            ->map(function (mixed $value, string $key): mixed {
+                // focus_keywords is legitimately an array of
+                // strings — turn it back into the stored
+                // [{keyword, is_primary}] shape, not the first
+                // element (that collapse is for file uploads).
+                if ($key === 'focus_keywords') {
+                    $keywords = self::stringsToKeywords($value);
+
+                    return $keywords === [] ? null : $keywords;
+                }
+
+                if (is_array($value)) {
+                    $value = Arr::first($value);
+                }
+
+                return ($value === '' || $value === null) ? null : $value;
+            })
+            ->all();
+    }
+
+    /**
+     * Write one locale's row: update the existing row (an emptied field clears
+     * its column), create one only when something was entered — an untouched
+     * language never gets a placeholder row.
+     *
+     * @param  array<string, mixed>  $row
+     */
+    protected static function persistRow(Model $target, string $locale, array $row): void
+    {
+        $existing = self::currentMeta($target, $locale);
+
+        if ($existing) {
+            $existing->update($row);
+        } elseif (array_filter($row) !== []) {
+            $target->seoMeta()->create($row + ['locale' => $locale]);
+        }
     }
 
     /**
      * @return array<string, Field>
      */
-    protected static function fields(): array
+    protected static function fields(?string $locale = null): array
     {
-        $fields = static::baseFields();
+        $fields = static::baseFields($locale);
 
         foreach (static::$fieldModifiers as $name => $modifiers) {
             if (! isset($fields[$name])) {
@@ -220,9 +403,12 @@ class SEOFields
     }
 
     /**
+     * @param  string|null  $locale  The language this set of fields edits — the
+     *                               script hint for the counters' budget while
+     *                               a field is still empty. Null = app locale.
      * @return array<string, Field>
      */
-    protected static function baseFields(): array
+    protected static function baseFields(?string $locale = null): array
     {
         return [
             'title' => TextInput::make('title')
@@ -230,7 +416,7 @@ class SEOFields
                 ->prefixIcon('heroicon-o-document-text')
                 ->maxLength(255)
                 ->live(debounce: 500)
-                ->helperText(fn (?string $state): HtmlString => self::titleCounter($state))
+                ->helperText(fn (?string $state): HtmlString => self::titleCounter($state, $locale))
                 ->columnSpan(2),
 
             'description' => Textarea::make('description')
@@ -238,7 +424,7 @@ class SEOFields
                 ->rows(3)
                 ->maxLength(500)
                 ->live(debounce: 500)
-                ->helperText(fn (?string $state): HtmlString => self::descriptionCounter($state))
+                ->helperText(fn (?string $state): HtmlString => self::descriptionCounter($state, $locale))
                 ->columnSpan(2),
 
             'focus_keywords' => TagsInput::make('focus_keywords')
@@ -283,13 +469,13 @@ class SEOFields
     /**
      * The live "n / max characters" counter under the title field. The budget
      * comes from the core {@see LengthPolicy} for the script of the value
-     * being typed (60 for Latin, ~30 for CJK) with the app locale as the hint
-     * for an empty field, and the count is in graphemes — the same numbers
-     * the audit and the Pro scan report.
+     * being typed (60 for Latin, ~30 for CJK) with the field's locale as the
+     * hint for an empty field, and the count is in graphemes — the same
+     * numbers the audit and the Pro scan report.
      */
-    protected static function titleCounter(?string $state): HtmlString
+    protected static function titleCounter(?string $state, ?string $locale = null): HtmlString
     {
-        $locale = app()->getLocale();
+        $locale ??= app()->getLocale();
         $policy = LengthPolicy::for($state, $locale);
 
         return self::counter(
@@ -306,9 +492,9 @@ class SEOFields
             : $target->seoMeta()->where('locale', $locale)->first();
     }
 
-    protected static function descriptionCounter(?string $state): HtmlString
+    protected static function descriptionCounter(?string $state, ?string $locale = null): HtmlString
     {
-        $locale = app()->getLocale();
+        $locale ??= app()->getLocale();
         $policy = LengthPolicy::for($state, $locale);
 
         return self::counter(

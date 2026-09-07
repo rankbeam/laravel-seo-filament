@@ -106,6 +106,33 @@ static::seoSection(showPreview: false);   // or SEOFields::make(showPreview: fal
 
 Without the trait, `SEOFields::make()` returns the same section directly.
 
+### Several languages
+
+The core keeps one `seo_meta` row per (model, locale). Pass the locales a page is published in
+and the section renders **one tab per language** — each editing its own row, with counters for
+that language's script (an empty Japanese title shows `0 / 30`, an English one `0 / 60`), its
+own preview and its own fallback indicators, badged with the number of fields set:
+
+```php
+static::seoSection(locales: ['en', 'it', 'ja']);   // or SEOFields::make(locales: [...])
+```
+
+Or once for every resource, in the published config:
+
+```bash
+php artisan vendor:publish --tag=seo-filament-config
+```
+
+```php
+// config/seo-filament.php
+'locales' => ['en', 'it', 'ja'],
+```
+
+Untouched languages never get a placeholder row. When the page runs a translatable plugin
+(Filament's `getActiveSchemaLocale()` — the spatie translatable plugins implement it), the
+section follows the page's own locale switcher instead of showing tabs. With neither, it edits
+the app locale's row, as before.
+
 > **Upgrading:** the preview view was replaced by the tabbed editor. If you published the
 > package views, refresh or remove the stale copy — see [`UPGRADING.md`](UPGRADING.md).
 
@@ -158,7 +185,7 @@ null given` on every Livewire test.
 
 ## Translations
 
-The editor follows `app()->getLocale()`. Publish the strings with `php artisan vendor:publish --tag=seo-filament-lang` to override a label, or contribute a language — rules and glossary in the core repository's [TRANSLATING.md](https://github.com/rankbeam/laravel-seo/blob/master/TRANSLATING.md).
+The editor's labels follow `app()->getLocale()` (the *content* locales it edits are a separate matter — see [Several languages](#several-languages)). Publish the strings with `php artisan vendor:publish --tag=seo-filament-lang` to override a label, or contribute a language — rules and glossary in the core repository's [TRANSLATING.md](https://github.com/rankbeam/laravel-seo/blob/master/TRANSLATING.md).
 
 ## Guides
 

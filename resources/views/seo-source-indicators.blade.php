@@ -4,7 +4,11 @@
 
     $record = $getRecord();
 
-    $sources = $record && $record->exists ? app(SEOFieldSources::class)->forModel($record) : null;
+    // The locale whose row this panel describes (a locale tab passes its own;
+    // the single editor passes the locale it edits). Null = app locale.
+    $locale = isset($locale) && is_string($locale) && $locale !== '' ? $locale : null;
+
+    $sources = $record && $record->exists ? app(SEOFieldSources::class)->forModel($record, $locale) : null;
 
     $fieldLabels = [
         'title' => __('seo-filament::seo-filament.indicators.title'),

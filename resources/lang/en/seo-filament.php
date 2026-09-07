@@ -104,4 +104,10 @@ return [
         'currency' => 'Currency',
         'availability' => 'Availability',
     ],
+
+    // The per-language tabs of the SEO section (several locales).
+    'locales' => [
+        'heading' => 'Languages',
+        'badge_tooltip' => ':count of :total fields set for :language',
+    ],
 ];

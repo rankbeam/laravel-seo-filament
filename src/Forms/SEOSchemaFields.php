@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
 use Rankbeam\Seo\Filament\Forms\Rules\ValidSchemaBlocks;
 use Rankbeam\Seo\Filament\Support\ResolvesSeoTarget;
+use Rankbeam\Seo\Filament\Support\SeoLocales;
 use Rankbeam\Seo\Services\Schema\BreadcrumbSchema;
 use Rankbeam\Seo\Services\Schema\FAQSchema;
 use Rankbeam\Seo\Services\Schema\ProductSchema;
@@ -93,7 +94,7 @@ class SEOSchemaFields
                         $target = self::resolveSeoTarget($target, $record, $component);
 
                         $stored = $target instanceof Model
-                            ? self::currentMeta($target, app()->getLocale())?->schema_jsonld
+                            ? self::currentMeta($target, self::locale($component))?->schema_jsonld
                             : null;
 
                         $component->getChildSchema()->fill(self::decompose($target, $stored) + [
@@ -115,7 +116,7 @@ class SEOSchemaFields
                         $state = $component->getChildSchema()->getState();
                         $value = self::compose($target, $state);
 
-                        $locale = app()->getLocale();
+                        $locale = self::locale($component);
                         $existing = self::currentMeta($target, $locale);
 
                         // Optimistic concurrency: if the column changed since the
@@ -250,6 +251,16 @@ class SEOSchemaFields
         return method_exists($target, 'seoMetaForLocale')
             ? $target->seoMetaForLocale($locale)->first()
             : $target->seoMeta()->where('locale', $locale)->first();
+    }
+
+    /**
+     * The seo_meta row this section edits: the page's active locale when a
+     * translatable plugin drives one (so the structured data follows the same
+     * header switcher as the rest of the form), else the app locale.
+     */
+    protected static function locale(Component $component): string
+    {
+        return SeoLocales::pageLocale($component) ?? app()->getLocale();
     }
 
     // -----------------------------------------------------------------
