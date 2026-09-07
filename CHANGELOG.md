@@ -6,6 +6,12 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-09-07
+
+### Added
+
+- **Seven more languages for the editor**: Japanese (`ja`), Simplified Chinese (`zh_CN`), Traditional Chinese (`zh_TW`), Korean (`ko`), Greek (`el`), Ukrainian (`uk`) and Czech (`cs`) — first passes, native review wanted; parity-tested with the first ten. The locale-tab labels (1.9) already named these languages through ext-intl; now the rest of the section speaks them too.
+
 ## [1.9.0] - 2026-09-07
 
 ### Added
