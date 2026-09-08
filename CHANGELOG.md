@@ -6,6 +6,16 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-09-08
+
+### Fixed
+
+- Preview title/description fallbacks, preview URLs and canonical provenance read content hooks in the editor's locale while source labels stay in the panel language.
+
+### Added
+
+- Every SEO field carries its content locale, exposed through `SeoLocales::forField()`. Pro actions can follow locale tabs, a single configured locale or the page's active schema locale without inferring the language from a field path. Requires core `^3.17`.
+
 ## [1.10.0] - 2026-09-07
 
 ### Added

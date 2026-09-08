@@ -29,6 +29,14 @@ use Rankbeam\Seo\I18n\Hreflang;
  */
 final class SeoLocales
 {
+    /** The locale attached to the actual editor field, including single-locale editors. */
+    public static function forField(Component $component): ?string
+    {
+        $locale = $component->getMeta('seo_locale');
+
+        return is_string($locale) && $locale !== '' ? $locale : self::pageLocale($component);
+    }
+
     /**
      * The ordered, de-duplicated locale list the editor should offer.
      *

@@ -389,6 +389,10 @@ class SEOFields
     {
         $fields = static::baseFields($locale);
 
+        foreach ($fields as $field) {
+            $field->meta('seo_locale', $locale);
+        }
+
         foreach (static::$fieldModifiers as $name => $modifiers) {
             if (! isset($fields[$name])) {
                 continue;

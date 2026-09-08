@@ -7,6 +7,7 @@ namespace Rankbeam\Seo\Filament\Support;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Rankbeam\Seo\I18n\LengthPolicy;
+use Rankbeam\Seo\I18n\ModelLocale;
 use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
 /**
@@ -62,10 +63,12 @@ class SEOPreviewData
      */
     public function forModel(?Model $model, ?string $locale = null): array
     {
+        $locale = $model === null ? ($locale ?? app()->getLocale()) : ModelLocale::forModel($model, $locale);
         $base = [
             'siteName' => (string) config('seo.site_name', config('app.name', '')),
             'titleSuffix' => (string) (config('seo.title_suffix', '') ?? ''),
-            'url' => $this->resolveUrl($model),
+            'url' => $model === null ? $this->resolveUrl(null) : ModelLocale::run($model, $locale,
+                fn (Model $localized): string => $this->resolveUrl($localized)),
             'fallbackTitle' => '',
             'fallbackDescription' => '',
             'image' => $this->emptyImage(),
