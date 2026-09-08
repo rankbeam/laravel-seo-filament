@@ -25,7 +25,7 @@
     },
     "require": {
         "php": "^8.2",
-        "rankbeam/laravel-seo": "^3.15",
+        "rankbeam/laravel-seo": "^3.17",
         "filament/filament": "^4.0|^5.0"
     },
     "require-dev": {

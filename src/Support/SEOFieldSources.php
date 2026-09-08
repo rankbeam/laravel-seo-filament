@@ -6,6 +6,7 @@ namespace Rankbeam\Seo\Filament\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Rankbeam\Seo\Data\SEOData;
+use Rankbeam\Seo\I18n\ModelLocale;
 use Rankbeam\Seo\Services\SEOComputedBuilder;
 use Rankbeam\Seo\Services\SEODefaultsRepository;
 
@@ -73,7 +74,7 @@ class SEOFieldSources
      */
     public function forModel(Model $model, ?string $locale = null): array
     {
-        $locale ??= app()->getLocale();
+        $locale = ModelLocale::forModel($model, $locale);
 
         // The manual layer is THIS locale's seo_meta row — not the app
         // locale's — so the indicators for an Italian tab describe the
@@ -141,7 +142,8 @@ class SEOFieldSources
         // The canonical has no content/defaults layers: the resolver derives
         // it from getUrlForSEO() (query-stripped) when not set manually.
         if ($field === 'canonical' && $manualValue === null && method_exists($model, 'getUrlForSEO')) {
-            $url = $model->getUrlForSEO();
+            $url = ModelLocale::run($model, $computed->locale ?? app()->getLocale(),
+                fn (Model $localized) => $localized->getUrlForSEO());
 
             if (is_string($url) && $url !== '') {
                 $layers[self::SOURCE_URL] = strtok($url, '?') ?: $url;
