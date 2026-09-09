@@ -3,14 +3,22 @@
 This file documents changes that may require action when upgrading
 `rankbeam/laravel-seo-filament`. Versions not listed are drop-in.
 
-## Unreleased
+## 1.12.0
 
-### Core package constraint remains `^2.0 || ^3.0`
+### Translatable Edit/Create pages
 
-This release keeps the existing core constraint broad. If your app is still on
-Core 2, the Filament forms now fall back to the older `seoMeta()` relation when
-`seoMetaForLocale()` is not available, so existing SEO/schema rows hydrate
-correctly. No composer constraint change is required.
+Use the Rankbeam `Translatable` adapter import in each Edit/Create page that
+uses the Lara Zeus locale switcher. See the [integration instructions](README.md#lara-zeus--spatie-page-switcher).
+The upstream switch reads form state through save hooks: older Rankbeam
+versions can write the outgoing language's SEO into the newly selected
+language even without Save. This release prevents those writes. The adapters
+also preserve unsaved per-language drafts and save them transactionally.
+
+No database migration is needed. Check existing translations if editors used
+the old switcher; an upgrade cannot reconstruct values already overwritten.
+The core dependency remains `^3.17` (raised in 1.11.0).
+
+## Earlier preview upgrade
 
 ### The SEO preview view was replaced — refresh any published copy
 
