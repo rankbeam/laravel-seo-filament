@@ -29,6 +29,26 @@ use Rankbeam\Seo\I18n\Hreflang;
  */
 final class SeoLocales
 {
+    /** A locale-switcher's state read must never persist the outgoing editor. */
+    public static function isSwitching(Component $component): bool
+    {
+        $livewire = $component->getLivewire();
+        if (method_exists($livewire, 'isSwitchingSeoLocale')) {
+            return $livewire->isSwitchingSeoLocale();
+        }
+        if (method_exists($livewire, 'getOldActiveLocale')) {
+            $old = $livewire->getOldActiveLocale();
+        } elseif (in_array('LaraZeus\\SpatieTranslatable\\Resources\\Concerns\\HasActiveLocaleSwitcher', class_uses_recursive($livewire), true)) {
+            // Plugin v1 (Filament 4) keeps this state protected and has no getter.
+            $old = (new \ReflectionProperty($livewire, 'oldActiveLocale'))->getValue($livewire);
+        } else {
+            return false;
+        }
+        $current = self::pageLocale($component);
+
+        return is_string($old) && $old !== '' && $current !== null && $old !== $current;
+    }
+
     /** The locale attached to the actual editor field, including single-locale editors. */
     public static function forField(Component $component): ?string
     {

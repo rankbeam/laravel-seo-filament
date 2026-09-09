@@ -136,6 +136,49 @@ the app locale's row, as before.
 > **Upgrading:** the preview view was replaced by the tabbed editor. If you published the
 > package views, refresh or remove the stale copy — see [`UPGRADING.md`](UPGRADING.md).
 
+
+### Lara Zeus / Spatie page switcher
+
+With `lara-zeus/spatie-translatable` **1.x on Filament 4** or **2.x on
+Filament 5**, use Rankbeam's page adapters for Edit and Create. Replace only
+the page trait imports; keep the plugin's resource/list traits, panel plugin
+and `LocaleSwitcher` action:
+
+```php
+// In your EditPost page:
+use Rankbeam\Seo\Filament\Resources\Pages\EditRecord\Concerns\Translatable;
+
+// In your CreatePost page (a separate file):
+use Rankbeam\Seo\Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
+```
+
+Each page still declares `use Translatable;` inside its class. The plugin
+remains an optional application dependency. Use its latest patched version;
+the integration fixture covers plugin 1.0.4 / Filament 4.13.1 and plugin
+2.0.1 / Filament 5.8.1.
+
+Switching keeps unsaved parent content, SEO metadata and structured-data drafts
+in the editor. Save validates every visited language and saves them together
+in a database transaction. A validation error opens the language that needs
+attention. Uploads are stored on Save; leaving or reloading the page discards
+unsaved drafts. Saving a draft does not translate missing content for you.
+
+The adapters preserve the normal before/after hooks and form-data mutators.
+If your page overrides `handleRecordCreation()`, `handleRecordUpdate()`,
+`callHook()` or transaction methods, integrate the adapter behavior in that
+customization and test its save flow. Database transactions do not roll back
+filesystem writes; applications should retain their usual orphan-file cleanup.
+
+For custom live text fields on Livewire 3, prefer `->live()` or
+`->live(onBlur: true)` over an explicit debounce: the latter delays local model
+state and can lose the last keystrokes during a quick locale switch. Rankbeam's
+title and description fields use the default request debounce.
+
+The upstream page traits alone refill forms during a switch. Rankbeam guards
+against their accidental metadata writes, but those traits do not preserve SEO
+drafts; migrate Edit/Create pages to the adapters. Explicit `locales:` tabs
+remain a shared editor and take precedence over the page switcher.
+
 ## Structured data (optional)
 
 Add a second, optional section so editors can attach schema.org JSON-LD without code:

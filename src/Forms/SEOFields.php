@@ -129,6 +129,8 @@ class SEOFields
             ->description(__('seo-filament::seo-filament.section.description'))
             ->schema([
                 Group::make()
+                    ->meta('rankbeam_locale_editor', 'metadata')
+                    ->meta('rankbeam_explicit_locales', $locales)
                     ->statePath('seo_meta')
                     ->dehydrated(false)
                     ->columnSpanFull()
@@ -165,6 +167,9 @@ class SEOFields
                         $component->getChildSchema()->fill($state);
                     })
                     ->saveRelationshipsUsing(function (Group $component, ?Model $record) use ($only, $target, $locales): void {
+                        if (SeoLocales::isSwitching($component)) {
+                            return;
+                        }
                         $target = self::resolveSeoTarget($target, $record, $component);
 
                         // Null target (create form / not-yet-existing relation)
@@ -419,7 +424,9 @@ class SEOFields
                 ->label(__('seo-filament::seo-filament.fields.title'))
                 ->prefixIcon('heroicon-o-document-text')
                 ->maxLength(255)
-                ->live(debounce: 500)
+                // Let Livewire debounce the request, not Alpine's local model state.
+                // An explicit debounce can drop pending input on a locale switch in Livewire 3.
+                ->live()
                 ->helperText(fn (?string $state): HtmlString => self::titleCounter($state, $locale))
                 ->columnSpan(2),
 
@@ -427,7 +434,9 @@ class SEOFields
                 ->label(__('seo-filament::seo-filament.fields.description'))
                 ->rows(3)
                 ->maxLength(500)
-                ->live(debounce: 500)
+                // Let Livewire debounce the request, not Alpine's local model state.
+                // An explicit debounce can drop pending input on a locale switch in Livewire 3.
+                ->live()
                 ->helperText(fn (?string $state): HtmlString => self::descriptionCounter($state, $locale))
                 ->columnSpan(2),
 

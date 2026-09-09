@@ -6,6 +6,18 @@ file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-09-09
+
+### Fixed
+
+- Guard metadata and structured-data save hooks during Lara Zeus locale switches, which otherwise write outgoing values into the newly selected language before Save.
+- Keep title/description input state current during fast switches on Livewire 3, using its default request debounce.
+
+### Added
+
+- Optional Lara Zeus Edit/Create adapters preserve per-language content, metadata, schema and upload drafts; validate all visited languages; and save them in a database transaction. Invalid drafts open their language, inactive parent fields retain their dehydration hooks, and Create Another starts with empty translation drafts.
+- Integration and upgrade instructions for Filament 4 / plugin 1 and Filament 5 / plugin 2. The plugin remains optional.
+
 ## [1.11.0] - 2026-09-08
 
 ### Fixed

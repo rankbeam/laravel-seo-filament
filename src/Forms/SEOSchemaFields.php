@@ -87,6 +87,7 @@ class SEOSchemaFields
             ->description(__('seo-filament::seo-filament.schema.section_description'))
             ->schema([
                 Group::make(self::fields())
+                    ->meta('rankbeam_locale_editor', 'schema')
                     ->statePath(self::STATE_PATH)
                     ->dehydrated(false)
                     ->columnSpanFull()
@@ -104,6 +105,9 @@ class SEOSchemaFields
                         ]);
                     })
                     ->saveRelationshipsUsing(function (Group $component, ?Model $record) use ($target): void {
+                        if (SeoLocales::isSwitching($component)) {
+                            return;
+                        }
                         $target = self::resolveSeoTarget($target, $record, $component);
 
                         // Null target (create form / not-yet-existing relation)
