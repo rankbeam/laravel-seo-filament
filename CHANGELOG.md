@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Guard metadata and structured-data save hooks during Lara Zeus locale switches, which otherwise write outgoing values into the newly selected language before Save.
+- Refresh the preview URL, fallback text and thresholds when the server payload changes, including Livewire 3 locale switches.
 - Keep title/description input state current during fast switches on Livewire 3, using its default request debounce.
 
 ### Added

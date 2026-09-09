@@ -16,9 +16,13 @@
     $statePath = $getStatePath();
     $image = $preview['image'];
     $thresholds = $preview['thresholds'];
+    // Livewire 3 preserves Alpine state during morphs. Refresh server-derived
+    // URLs, fallbacks and thresholds when their preview payload changes.
+    $previewKey = hash('sha256', json_encode([$statePath, $preview, app()->getLocale()]));
 @endphp
 
 <div
+    wire:key="seo-preview-{{ $previewKey }}"
     x-data="{
         seoTitle: $wire.$entangle('{{ $statePath }}.title'),
         seoDesc: $wire.$entangle('{{ $statePath }}.description'),
