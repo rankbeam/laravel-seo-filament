@@ -58,6 +58,9 @@ trait InteractsWithSeoLocaleDrafts
             $attributes = static::getResource()::getTranslatableAttributes();
             $this->captureSeoDraft($this->oldActiveLocale);
             $this->otherLocaleData[$this->oldActiveLocale] = Arr::only($raw, $attributes);
+            // A model update can build the cached form before activeLocale changes.
+            // Rebuild its locale-bound fields and preview for the destination.
+            $this->cacheSchema('form', null);
             $incoming = [
                 ...Arr::except($raw, $attributes),
                 ...(isset($this->seoTranslatedDrafts[$this->activeLocale]) ? [] : ($this->otherLocaleData[$this->activeLocale] ?? [])),
