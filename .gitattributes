@@ -3,6 +3,7 @@
 /.github export-ignore
 /.gitignore export-ignore
 /tests export-ignore
+/docs/images export-ignore
 /phpunit.xml export-ignore
 
 * text=auto

@@ -44,13 +44,14 @@ php artisan migrate
 
 | Dependency | Version |
 |---|---|
-| PHP | 8.2 – 8.4 |
+| PHP | ^8.2 (Laravel 13 requires PHP 8.3+) |
 | Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
-| Core package | `rankbeam/laravel-seo` ^2.0 \|\| ^3.0 |
+| Core package | `rankbeam/laravel-seo` ^3.17 |
 
-Core 2 installs are supported under this constraint: when the newer
-`seoMetaForLocale()` helper is not available, the forms hydrate through the
-older `seoMeta()` relation.
+These are the constraints for the current release. Upgrade older core installs
+to a compatible 3.x version before upgrading the editor. See the
+[installation guide](https://docs.rankbeam.dev/guide/installation) for runtime
+coverage and optional dependencies.
 
 <div class="filament-hidden">
 
@@ -162,6 +163,17 @@ in the editor. Save validates every visited language and saves them together
 in a database transaction. A validation error opens the language that needs
 attention. Uploads are stored on Save; leaving or reloading the page discards
 unsaved drafts. Saving a draft does not translate missing content for you.
+
+These lossless 2× captures show the same local test application's English
+operator interface editing Italian and Japanese content. The screenshots use
+Filament 5.8.1, Lara Zeus 2.0.1 and Rankbeam Filament 1.12.0. They demonstrate
+content-locale previews and counters, not native-language quality approval.
+The captures also show optional Pro 2.40.1 controls: AI suggestions and scan
+scores require Pro and are not included in the free editor.
+
+[![Italian content in the editor](https://raw.githubusercontent.com/rankbeam/laravel-seo-filament/master/docs/images/editor-it.png)](https://raw.githubusercontent.com/rankbeam/laravel-seo-filament/master/docs/images/editor-it.png)
+
+[![Japanese content in the editor](https://raw.githubusercontent.com/rankbeam/laravel-seo-filament/master/docs/images/editor-ja.png)](https://raw.githubusercontent.com/rankbeam/laravel-seo-filament/master/docs/images/editor-ja.png)
 
 The adapters preserve the normal before/after hooks and form-data mutators.
 If your page overrides `handleRecordCreation()`, `handleRecordUpdate()`,
