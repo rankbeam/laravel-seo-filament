@@ -37,7 +37,6 @@ function writeImage(string $path, int $width, int $height): void
 
     $image = imagecreatetruecolor($width, $height);
     imagepng($image, $absolute);
-    imagedestroy($image);
 }
 
 function previewFor(Post $post): array
