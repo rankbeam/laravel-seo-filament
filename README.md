@@ -44,7 +44,7 @@ php artisan migrate
 
 | Dependency | Version |
 |---|---|
-| PHP | ^8.2 (Laravel 13 requires PHP 8.3+) |
+| PHP | ^8.2 (Laravel 13 requires PHP 8.3+; PHP 8.5 requires Laravel 12 or 13) |
 | Filament | **4.x or 5.x** (both tested in CI; the test suite passes unchanged on both) |
 | Core package | `rankbeam/laravel-seo` ^3.17 |
 

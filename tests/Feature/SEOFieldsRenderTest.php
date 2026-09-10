@@ -81,8 +81,6 @@ it('can read seo meta from a core-2-style target without seoMetaForLocale()', fu
 
     $seoCurrentMeta = new ReflectionMethod(SEOFields::class, 'currentMeta');
     $schemaCurrentMeta = new ReflectionMethod(SEOSchemaFields::class, 'currentMeta');
-    $seoCurrentMeta->setAccessible(true);
-    $schemaCurrentMeta->setAccessible(true);
 
     expect($seoCurrentMeta->invoke(null, $target, 'en')->is($meta))->toBeTrue()
         ->and($schemaCurrentMeta->invoke(null, $target, 'en')->is($meta))->toBeTrue();
