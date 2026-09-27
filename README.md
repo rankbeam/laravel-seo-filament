@@ -10,6 +10,11 @@ social previews, focus keywords, canonical and robots controls, social-image val
 and clear indicators showing whether each value is manual or inherited from Rankbeam's
 fallback chain.
 
+**Multilingual SEO is included.** Edit each content language in its own tab, with
+separate metadata, previews and script-aware counters. The editor's interface ships
+in **17 languages** and can stay in English while you edit Italian or Japanese.
+See [multilingual editing](#several-languages) and [interface translations](#translations).
+
 Free and MIT licensed. Values are stored through
 [`rankbeam/laravel-seo`](https://github.com/rankbeam/laravel-seo), with no extra columns
 on your resource tables.
@@ -35,6 +40,8 @@ php artisan migrate
 ## What you get
 
 - Live Google and social previews while editors type.
+- Per-language SEO tabs, or integration with your page's locale switcher through the [Lara Zeus / Spatie adapters](#lara-zeus--spatie-page-switcher).
+- Translated interface labels in 17 languages, independent of the content language.
 - Title, description, focus keywords, canonical, robots, and social-image fields.
 - Manual-versus-fallback source indicators for every effective value.
 - Optional schema.org fields for breadcrumbs, FAQs, and products.
@@ -240,7 +247,27 @@ null given` on every Livewire test.
 
 ## Translations
 
-The editor's labels follow `app()->getLocale()` (the *content* locales it edits are a separate matter — see [Several languages](#several-languages)). Publish the strings with `php artisan vendor:publish --tag=seo-filament-lang` to override a label, or contribute a language — rules and glossary in the core repository's [TRANSLATING.md](https://github.com/rankbeam/laravel-seo/blob/master/TRANSLATING.md). Seventeen languages ship: English, Italian, German, French, Spanish, Brazilian Portuguese, Dutch, Turkish, Russian, Polish and, since 1.10, Japanese, Simplified and Traditional Chinese (`zh_CN`, `zh_TW`), Korean, Greek, Ukrainian and Czech.
+The editor's labels follow `app()->getLocale()`. These **17 interface locales** ship
+with the free package:
+
+English (`en`), Italian (`it`), German (`de`), French (`fr`), Spanish (`es`),
+Brazilian Portuguese (`pt_BR`), Dutch (`nl`), Turkish (`tr`), Russian (`ru`), Polish (`pl`),
+Japanese (`ja`), Simplified Chinese (`zh_CN`), Traditional Chinese (`zh_TW`), Korean (`ko`),
+Greek (`el`), Ukrainian (`uk`) and Czech (`cs`).
+
+The interface language and the [content languages you edit](#several-languages) are
+independent. The list above describes bundled labels; it does not limit your site's
+content locales. Your application supplies the translated content. The free editor
+does not translate it automatically.
+
+To override a label, publish the translation files:
+
+```bash
+php artisan vendor:publish --tag=seo-filament-lang
+```
+
+To contribute a language, follow the rules and glossary in the core repository's
+[TRANSLATING.md](https://github.com/rankbeam/laravel-seo/blob/master/TRANSLATING.md).
 
 ## Guides
 
